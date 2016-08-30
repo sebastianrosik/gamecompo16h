@@ -62,7 +62,9 @@
 	
 	var _communication = __webpack_require__(7);
 	
-	var _JetPackGame = __webpack_require__(8);
+	var _resources = __webpack_require__(8);
+	
+	var _JetPackGame = __webpack_require__(9);
 	
 	var _JetPackGame2 = _interopRequireDefault(_JetPackGame);
 	
@@ -144,7 +146,9 @@
 	  calcOffset();
 	}
 	
-	window.addEventListener('load', init);
+	window.addEventListener('load', function () {
+	  _resources.resources.load(init);
+	});
 	window.addEventListener('resize', resize);
 
 /***/ },
@@ -775,18 +779,88 @@
 	  type: 'hello'
 	};
 	
-	var socket = exports.socket = new WebSocket('ws://localhost', 'test');
+	function readCookie(name) {
+	  var c = document.cookie.split(';');
+	  for (var i = 0; i < c.length; ++i) {
+	    var item = c[i];
+	    var cookie = item.split('=');
+	    if (cookie[0] == name) {
+	      return cookie[1];
+	    }
+	  }
+	}
+	
+	var socket = exports.socket = new WebSocket('ws://' + (readCookie('ws') || 'localhost'), readCookie('jetpack') || 'abc');
 	
 	socket.onopen = function () {
-	  socket.send(JSON.strigify(msg));
+	  socket.send(JSON.stringify(msg));
 	};
 	
 	socket.onmessage = function (msgraw) {
-	  console.log(JSON.parse(msgraw));
+	  console.log(JSON.parse(msgraw.data));
 	};
 
 /***/ },
 /* 8 */
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var resources = exports.resources = {
+	  image: {},
+	  json: {},
+	  load: function load(callback) {
+	    files.forEach(function (file) {
+	      loadJSON('./' + file + '.json', function (json) {
+	        resources.json[file] = json;
+	        loaded++;
+	        check(callback);
+	      });
+	      loadImage('./' + file + '.png', function (image) {
+	        resources.image[file] = image;
+	        loaded++;
+	        check(callback);
+	      });
+	    });
+	  }
+	};
+	
+	function loadJSON(file, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.open('GET', file, true);
+	  xhr.send(null);
+	  xhr.onreadystatechange = function () {
+	    if (xhr.readyState == 4) {
+	      callback(JSON.parse(xhr.response));
+	    }
+	  };
+	}
+	
+	function loadImage(file, callback) {
+	  var image = new Image();
+	  image.onload = function () {
+	    callback(image);
+	  };
+	  image.src = file;
+	}
+	
+	var files = ['flame', 'soldier'];
+	var loaded = 0;
+	var total = files.length * 2;
+	
+	function check(cb) {
+	  if (total <= loaded) {
+	    cb();
+	  }
+	}
+	
+	window.resources = resources;
+
+/***/ },
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -797,19 +871,19 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Entity = __webpack_require__(9);
+	var _Entity = __webpack_require__(10);
 	
 	var _Entity2 = _interopRequireDefault(_Entity);
 	
-	var _Soldier = __webpack_require__(11);
+	var _Soldier = __webpack_require__(12);
 	
 	var _Soldier2 = _interopRequireDefault(_Soldier);
 	
-	var _Bullet = __webpack_require__(12);
+	var _Bullet = __webpack_require__(13);
 	
 	var _Bullet2 = _interopRequireDefault(_Bullet);
 	
-	var _Ground = __webpack_require__(13);
+	var _Ground = __webpack_require__(14);
 	
 	var _Ground2 = _interopRequireDefault(_Ground);
 	
@@ -965,7 +1039,7 @@
 	}
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -976,7 +1050,7 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Sprite2 = __webpack_require__(10);
+	var _Sprite2 = __webpack_require__(11);
 	
 	var _Sprite3 = _interopRequireDefault(_Sprite2);
 	
@@ -1087,7 +1161,7 @@
 	exports.default = Entity;
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1161,6 +1235,9 @@
 	      ctx.restore();
 	    }
 	  }, {
+	    key: 'drawFrame',
+	    value: function drawFrame(ctx, frame) {}
+	  }, {
 	    key: 'draw',
 	    value: function draw(ctx, frame) {}
 	  }, {
@@ -1190,7 +1267,7 @@
 	exports.default = Sprite;
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1201,7 +1278,7 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Entity2 = __webpack_require__(9);
+	var _Entity2 = __webpack_require__(10);
 	
 	var _Entity3 = _interopRequireDefault(_Entity2);
 	
@@ -1211,7 +1288,9 @@
 	
 	var _generators = __webpack_require__(3);
 	
-	var _Bullet = __webpack_require__(12);
+	var _resources = __webpack_require__(8);
+	
+	var _Bullet = __webpack_require__(13);
 	
 	var _Bullet2 = _interopRequireDefault(_Bullet);
 	
@@ -1226,6 +1305,8 @@
 	var MAX_HEALTH = 1;
 	var SOLDIER_WIDTH = 32;
 	var SOLDIER_HEIGHT = 32;
+	
+	function getJSONFrame(resource, frameNumber) {}
 	
 	var Soldier = function (_Entity) {
 	  _inherits(Soldier, _Entity);
@@ -1284,9 +1365,21 @@
 	      }
 	    }
 	  }, {
+	    key: 'drawFrame',
+	    value: function drawFrame(ctx, frameName) {
+	      ctx.save();
+	      ctx.drawImage(_resources.resources.image.soldier, this.position.x, this.position.y);
+	      ctx.restore();
+	
+	      var flame = _resources.resources.json.flame;
+	
+	      var flameFrame = getJSONFrame(flame, frameNumber);
+	    }
+	  }, {
 	    key: 'draw',
 	    value: function draw(ctx, frame) {
 	      _Entity3.default.prototype.draw.call(this, ctx, frame);
+	      this.drawFrame(ctx, frame);
 	      ctx.save();
 	      ctx.fillStyle = 'rgba(0,0,0,0.5)';
 	      ctx.beginPath();
@@ -1322,7 +1415,7 @@
 	exports.default = Soldier;
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1333,7 +1426,7 @@
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _Entity2 = __webpack_require__(9);
+	var _Entity2 = __webpack_require__(10);
 	
 	var _Entity3 = _interopRequireDefault(_Entity2);
 	
@@ -1383,7 +1476,7 @@
 	exports.default = Bullet;
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1392,7 +1485,7 @@
 	  value: true
 	});
 	
-	var _Entity2 = __webpack_require__(9);
+	var _Entity2 = __webpack_require__(10);
 	
 	var _Entity3 = _interopRequireDefault(_Entity2);
 	
