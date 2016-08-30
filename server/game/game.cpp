@@ -132,6 +132,10 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
   }
 
   if (v.asString() == "ready") {
+    if (j["nick"].asString().size() > 32) {
+      return;
+    }
+
     p->nick = j["nick"].asString();
 
     Game *g = Game::GetByID(j["game"].asString());
