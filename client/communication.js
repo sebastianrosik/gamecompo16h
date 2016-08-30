@@ -16,7 +16,6 @@ export function readCookie(name) {
   }  
 }
 
-window.readCookie = readCookie
 let ws = readCookie('ws');
 let jetpack = readCookie('jetpack');
 

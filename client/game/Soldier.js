@@ -108,8 +108,7 @@ export default class Soldier extends Entity {
 
   setState(stateData, currentId) {
     this.health = stateData.health;
-    this.nick = stateData.nick;
-
+    this.name = stateData.nick;
     if (this.id !== currentId) {
       this.position.x = stateData.x;
       this.position.y = stateData.y;
