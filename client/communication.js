@@ -1,6 +1,3 @@
-var msg = {
-  type: 'hello'
-}
 
 function readCookie(name) {
   var c = document.cookie.split(';');
@@ -16,12 +13,21 @@ function readCookie(name) {
 }
 let ws = readCookie('ws');
 let jetpack = readCookie('jetpack');
-export var socket = new WebSocket('ws://' + (ws || 'localhost') , jetpack || 'abc');
 
-socket.onopen = function () {
-  socket.send(JSON.stringify(msg));
+let socket;
+
+export function connect(cb, onMsg = () => {}) {
+  socket = new WebSocket('ws://' + (ws || 'localhost') , jetpack || 'abc');
+
+  socket.onopen = function () {
+    cb();
+  }
+
+  socket.onmessage = function (msgraw) {
+    onMsg(JSON.parse(msgraw.data));
+  }
 }
 
-socket.onmessage = function (msgraw) {
-  console.log(JSON.parse(msgraw.data));
+export function sendMsg(msg) {
+  socket.send(JSON.stringify(msg));
 }
