@@ -97,6 +97,7 @@ void Player::UpdateState(Json::Value &j) {
     nb.x = b[0].asDouble();
     nb.y = b[1].asDouble();
     nb.lifetime = b[2].asDouble();
+    nb.id = b[3].asString();
     this->bullets.push_back(nb);
   }
 }
@@ -185,7 +186,7 @@ void GameMaster() {
     games_m.lock();
     unsigned long t = clock();    
     for (auto& g : games) {
-      if (t - g.second->last_tick < 1000000 / 16) {
+      if (t - g.second->last_tick < 1000000 / 64) {
         continue;
       }
 
@@ -225,8 +226,8 @@ void GameMaster() {
             bullets += ", ";
           }
 
-          snprintf(buf, 4096, "[ %f, %f, %f, \"%s\" ]",
-              bb.x, bb.y, bb.lifetime, p->id.c_str());
+          snprintf(buf, 4096, "[ %f, %f, %f, \"%s\", \"%s\" ]",
+              bb.x, bb.y, bb.lifetime, p->id.c_str(), bb.id.c_str());
           bullets += buf;
         }
         p->m.unlock();
