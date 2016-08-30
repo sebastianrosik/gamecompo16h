@@ -290,11 +290,12 @@ NetSock::Disconnect()
   if(this->socket == -1)
     return false;
 
-  closesocket(this->socket);
+  int tmp_socket = this->socket;
   this->socket = -1;
-  this->ip     = 0x00000000;
+  //this->ip     = 0x00000000;
   this->mode   = 0;
-  this->port   = 0;
+  //this->port   = 0;
+  closesocket(tmp_socket);  
   return true;
 }
 
@@ -386,6 +387,9 @@ NetSock::WriteAll(const void *Buffer, int Size)
     }
     else if(ret == -1) 
     {
+      fwrite("ERROR\n", 1, 6, stderr);
+      fflush(stderr);
+
       // What's the problem?
 #ifdef __unix__
       if(errno == EAGAIN || errno == EWOULDBLOCK)
