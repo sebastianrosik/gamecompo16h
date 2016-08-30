@@ -132,6 +132,8 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
   }
 
   if (v.asString() == "ready") {
+    p->nick = j["nick"].asString();
+
     Game *g = Game::GetByID(j["game"].asString());
 
     if (p->game != nullptr && p->game != g) {
@@ -241,7 +243,7 @@ void GameMaster() {
     }
 
 
-    __asm(".byte 0x90");
+    __asm(".byte 0x90"); // TURBO HACKER ASSEMBLER!11 
   }
 }
 

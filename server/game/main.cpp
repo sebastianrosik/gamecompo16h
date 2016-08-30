@@ -91,7 +91,7 @@ void WebsocketConnection::handle() {
   sender.join();
 
   printf("%s:%u: sender terminated\n",
-         s->GetStrIP(), s->GetPort());  
+         s->GetStrIP(), s->GetPort());
 }
 
 void WebsocketConnection::handle_send() {
@@ -111,7 +111,12 @@ void WebsocketConnection::handle_send() {
     /*printf("Sending packet: \n");
     fwrite(packet.data(), packet.size(), 1, stdout);
     fflush(stdout);*/
-    s->WriteAll(packet.data(), packet.size());
+    if (s->WriteAll(packet.data(), packet.size()) == 0) {
+      printf("%s:%u: failed while sending\n",
+         s->GetStrIP(), s->GetPort());   
+      this->end = true;
+      return;
+    }
   }
 }
 
@@ -447,7 +452,11 @@ void handle_new_connection(NetSock *_s) {
       "Sec-WebSocket-Version: 13\r\n"
       "\r\n", accept_key_b64, proto.c_str());
 
-  s->WriteAll(response, strlen(response));
+  if (s->WriteAll(response, strlen(response)) == 0) {
+    printf("%s:%u: failed while sending success info\n",
+        s->GetStrIP(), s->GetPort());
+    return;
+  }
   //puts(response);
 
   // Is a websocket.
