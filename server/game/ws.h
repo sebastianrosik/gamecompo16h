@@ -2,14 +2,16 @@
 #include <mutex>
 #include <list>
 #include <atomic>
+#include <string>
 #include "NetSock.h"
 
 class WebsocketConnection {
  public:
-  WebsocketConnection(NetSock *s);
+  WebsocketConnection(NetSock *s, const std::string& session_id);
   void handle();  // blocking
 
   void send(int type, const void *data, size_t size);
+  std::string session_id;  
 
  private:
   void handle_recv();

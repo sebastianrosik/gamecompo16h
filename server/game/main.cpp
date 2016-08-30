@@ -64,13 +64,18 @@ void WebsocketConnection::send(int type, const void *data, size_t size) {
   send_queue_m.unlock();
 }
 
-WebsocketConnection::WebsocketConnection(NetSock *s) {
+WebsocketConnection::WebsocketConnection(
+    NetSock *s, const std::string& session_id) {
   this->s = s;
   this->end = false;
+  this->session_id = session_id;
 }
 
 void WebsocketConnection::handle() {
   std::thread sender(&WebsocketConnection::handle_send, this);
+  
+  send(SEND_DATA, "{\"type\":\"hello\"}", 16);
+
   handle_recv();
   sender.join();
 }
@@ -429,7 +434,7 @@ void handle_new_connection(NetSock *_s) {
   printf("%s:%u: switched to websocket\n",
          s->GetStrIP(), s->GetPort());
 
-  WebsocketConnection ws(s.get());
+  WebsocketConnection ws(s.get(), proto);
   ws.handle();
 }
 
