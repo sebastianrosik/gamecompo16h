@@ -155,8 +155,8 @@ void WebsocketConnection::handle_recv() {
       }
 
       size_t idx = data.size();
-      printf("%llu %i %llu\n", data.size(), ret, data.size() + ret);
-      fflush(stdout);
+      //printf("%llu %i %llu\n", data.size(), ret, data.size() + ret);
+      //fflush(stdout);
       data.resize(data.size() + ret);
       memcpy(&data[0] + idx, buf, ret);
       continue;
