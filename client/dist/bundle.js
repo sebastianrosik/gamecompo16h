@@ -1768,7 +1768,7 @@
 	  }, {
 	    key: 'drawGun',
 	    value: function drawGun(ctx, frameNumber) {
-	      var s = 64;
+	      var s = 40;
 	      ctx.save();
 	      ctx.translate(this.position.x + s / 2, this.position.y + s / 2);
 	      ctx.rotate(this.targetAngle + Math.PI);

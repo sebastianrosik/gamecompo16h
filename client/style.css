@@ -14,7 +14,14 @@ html, body, canvas {
   padding: 0;
 }
 canvas {
-  background: #444;
+  background: #000;
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#1c0001+0,230003+68,6d0019+100 */
+background: #1c0001; /* Old browsers */
+background: -moz-linear-gradient(top,  #1c0001 0%, #230003 68%, #6d0019 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(top,  #1c0001 0%,#230003 68%,#6d0019 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(to bottom,  #1c0001 0%,#230003 68%,#6d0019 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1c0001', endColorstr='#6d0019',GradientType=0 ); /* IE6-9 */
+
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;

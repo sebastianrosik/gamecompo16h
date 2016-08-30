@@ -66,7 +66,7 @@ export default class Soldier extends Entity {
   }
 
   drawGun(ctx,frameNumber) {
-    let s = 64;
+    let s = 40;
     ctx.save();
     ctx.translate(
       this.position.x + s / 2, 
