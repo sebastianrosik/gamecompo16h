@@ -116,8 +116,13 @@ void WebsocketConnection::handle_recv() {
   int ms_state = MS_NO_DATA;
   
   while (!this->end.load()) {
-    //printf("%u %u\n", data.size(), state_needs);
-    //fflush(stdout);
+    /*printf("%u %u\n", data.size(), state_needs);
+    for(size_t i = 0; i < data.size(); i++) {
+      printf("%.2x ", data[i]);
+    }
+    //fwrite(&data[0], 1, data.size(), stdout);
+    puts("");
+    fflush(stdout);*/
     if (data.size() < state_needs) {
       uint8_t buf[4096];
       int ret = s->Read(buf, sizeof(buf));
@@ -140,6 +145,7 @@ void WebsocketConnection::handle_recv() {
 
     // Slow.
     memmove(&data[0], &data[state_needs], data.size() - state_needs);
+    data.resize(data.size() - state_needs);
 
     //printf("state: %i\n", state);
 
