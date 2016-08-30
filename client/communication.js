@@ -5,7 +5,7 @@ var msg = {
 export var socket = new WebSocket('ws://localhost', 'test');
 
 socket.onopen = function () {
-  socket.send(JSON.strigify(msg));
+  socket.send(JSON.stringify(msg));
 }
 
 socket.onmessage = function (msgraw) {

@@ -4,6 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
+    "build" : "webpack",
     "develop": "webpack-dev-server --progress --colors"
   },
   "author": "",
