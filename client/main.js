@@ -42,6 +42,5 @@ function resize() {
   calcOffset();
 }
 
-
 window.addEventListener('load', init);
 window.addEventListener('resize', resize);

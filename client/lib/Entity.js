@@ -13,10 +13,17 @@ export default class Entity extends Sprite {
     this.rotation = 0;
     this.isFixed = false;
     this.targetingEnabled = false;
+    this.type = 'entity';
+    this.dontCollideWith = [];
+    this.targetAngle = 0;
   }
 
   getTargetAngle() {
     return  Math.atan2(this.target.y - this.position.y, this.target.x - this.position.x);
+  }
+
+  canCollide(entity) {
+    return entity.id !== this.id && this.dontCollideWith.indexOf(entity.type) == -1;
   }
 
   drawDebug(ctx, frame) {
@@ -29,9 +36,8 @@ export default class Entity extends Sprite {
       ctx.strokeStyle = 'red';
       ctx.beginPath();
       let radius = 12;
-      let angle = this.getTargetAngle();
-      let x = cx + Math.cos(angle) * radius;
-      let y = cy + Math.sin(angle) * radius;
+      let x = cx + Math.cos(this.targetAngle) * radius;
+      let y = cy + Math.sin(this.targetAngle) * radius;
       ctx.arc(
         x,
         y,
@@ -68,5 +74,6 @@ export default class Entity extends Sprite {
 
   setTarget(vec) {
     this.target.copy(vec);
+    this.targetAngle = this.getTargetAngle();
   }
 }

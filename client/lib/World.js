@@ -91,16 +91,18 @@ export default class World extends Abstract {
     }
   }
   
-  tick() {
+  tick(frame) {
     for (let i = 0, l = this.children.length; i < l; ++i) {
       let entity = this.children[i];
       entity.velocity.add(entity.acceleration);
 
-      if (!entity.isFixed) {
+      if (!entity.isFixed && !entity.noGrav) {
         entity.velocity.add(this.gravity);
       }
 
-      entity.velocity.multiplyScalar(this.friction);
+      if (!entity.noFriction) {
+        entity.velocity.multiplyScalar(this.friction);
+      }
       entity.velocity.clamp(-entity.maxSpeed, entity.maxSpeed);
       entity.acceleration.multiplyScalar(0);
 
@@ -108,14 +110,12 @@ export default class World extends Abstract {
         var entities = entity.parent.children;
         var collision;
         for (var n in entities) {
-          // if (!entities[n].isFixed) {
-            if (entity.id !== entities[n].id ) {
+            if (entity.canCollide(entities[n])) {
               collision = this.getCollision(entity, entities[n]);
               if (collision.x && collision.y) {
                 this.resolveCollision(entity, entities[n], collision);
               }
             }
-          // }
         }
       }
       entity.position.add(entity.velocity);

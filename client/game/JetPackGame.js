@@ -1,21 +1,31 @@
 import Entity from '../lib/Entity';
 import Soldier from './Soldier';
+import Bullet from './Bullet';
 import Ground from './Ground';
 
+const SOLDIERS = 4;
+
 export default class JetPackGame {
-  constructor({renderer, world, keyboard}) {
+  constructor({renderer, world, keyboard, mouse}) {
     this.renderer = renderer;
     this.world = world;
     this.renderer.children = this.world.children;
-    this.soldiers = [new Soldier()];
-    this.soldiers.forEach(soldier => this.add(soldier));
     this.keyboard = keyboard;
-    this.keyboardHandler();
+    this.mouse = mouse;
     this.createGround();
-    this.createWalls();
+    this.createSoldiers();
   }
 
-  createWalls() {
+  createSoldiers() {
+    this.soldiers = [];
+    let x = 20;
+    let y = 100;
+    let distance = 100;
+    for (let i = 0; i < SOLDIERS; ++i) {
+      this.soldiers.push(new Soldier(i * distance, y))
+    }
+    this.soldiers.forEach(soldier => this.add(soldier));
+    this.myself = this.soldiers[0];
   }
 
   createGround() {
@@ -26,18 +36,25 @@ export default class JetPackGame {
     }
   }
 
-  keyboardHandler() {
+  mouseHandler(frame) {
+    if (this.mouse.button[0]) {
+      this.soldiers[0].fire(frame);
+    }
+    this.myself.setTarget(this.mouse);
+  }
+
+  keyboardHandler(frame) {
     let v = 0.3;
-    if (this.keyboard.up) {
+    if (this.keyboard.up || this.keyboard.w) {
       this.soldiers[0].acceleration.y -= v * 1.5;
     }
-    if (this.keyboard.down) {
+    if (this.keyboard.down  || this.keyboard.s) {
       this.soldiers[0].acceleration.y += v;
     }
-    if (this.keyboard.left) {
+    if (this.keyboard.left || this.keyboard.a) {
       this.soldiers[0].acceleration.x -= v;
     }
-    if (this.keyboard.right) {
+    if (this.keyboard.right || this.keyboard.d) {
       this.soldiers[0].acceleration.x += v;
     }
   }
@@ -51,7 +68,28 @@ export default class JetPackGame {
   }
 
   tick(frame) {
-    this.keyboardHandler();
+    this.keyboardHandler(frame);
+    this.mouseHandler(frame);
     this.world.tick(frame);
+    this.handleBulltes(frame);
+  }
+
+  handleBulltes(frame) {
+    let soldiers = this.soldiers;
+    this.world.children.forEach(child => {
+      if (child instanceof Bullet) {
+        if (child.checkLifetime(frame)) {
+          this.world.remove(child);
+        }
+        for (let n = 0; n < soldiers.length; ++n) {
+          if (child.ownerId !== soldiers[n].id) {
+            let collision = this.world.getCollision(child, soldiers[n]);
+            if (collision.x && collision.y) {
+              soldiers[n].kill();
+            }
+          }
+        }
+      }
+    });
   }
 }
