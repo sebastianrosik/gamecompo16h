@@ -1,24 +1,20 @@
 import Entity from '../lib/Entity';
 
-const BULLET_LIFETIME = 60;
+const BULLET_LIFETIME = 1000;
 
 export default class Bullet extends Entity {
-  constructor(x, y, ownerId, startFrame) {
+  constructor(x, y, ownerId) {
     super(x, y, 6, 6);
     this.noGrav = true;
     this.noFriction = true;
     this.ownerId = ownerId;
-    this.startFrame = startFrame;
+    this.lifetime = Date.now();
     this.type = 'bullet';
     this.damagePoints = 0.1;
     this.dontCollideWith = [this.type, 'soldier'];
   }
 
-  setFrame(frame) {
-    this.frame = frame;
-  }
-
-  checkLifetime(currentFrame) {
-    return currentFrame - this.startFrame > BULLET_LIFETIME;
+  checkLifetime() {
+    return Date.now() - this.lifetime > BULLET_LIFETIME;
   }
 }

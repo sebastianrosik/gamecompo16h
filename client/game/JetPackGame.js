@@ -23,14 +23,22 @@ export default class JetPackGame {
     this.startSendingMessages();
   }
 
-  getPlayerState(soldier) {
-  
+  getPlayerState() {
+      return {
+        health: this.myself.health,
+        points: this.myself.points,
+        killed: this.myself.killed,
+        x: this.myself.position.x,
+        y: this.myself.position.y
+      }
   }
 
-  getBulletsState(soldier) {
+  getBulletsState() {
     return this.world.children
-            .filter(child => child.ownerId == this.myself.id)
-            .map(bullet => [bullet.x, bullet.y, bullet.lifetime]);
+            .filter(child => {
+                return child.ownerId == this.myself.id
+            })
+            .map(bullet => [bullet.position.x, bullet.position.y, bullet.lifetime]);
   }
 
 
@@ -43,9 +51,9 @@ export default class JetPackGame {
   }
 
   startSendingMessages() {
-    setInterval(() => {      
+    setInterval(() => {
       sendMsg(this.getMessagePayload())
-    }, 1000);//1000 / 16);
+    }, 1000 / 16);
   }
 
   createSoldiers() {

@@ -945,16 +945,24 @@
 	
 	  _createClass(JetPackGame, [{
 	    key: 'getPlayerState',
-	    value: function getPlayerState(soldier) {}
+	    value: function getPlayerState() {
+	      return {
+	        health: this.myself.health,
+	        points: this.myself.points,
+	        killed: this.myself.killed,
+	        x: this.myself.position.x,
+	        y: this.myself.position.y
+	      };
+	    }
 	  }, {
 	    key: 'getBulletsState',
-	    value: function getBulletsState(soldier) {
+	    value: function getBulletsState() {
 	      var _this = this;
 	
 	      return this.world.children.filter(function (child) {
 	        return child.ownerId == _this.myself.id;
 	      }).map(function (bullet) {
-	        return [bullet.x, bullet.y, bullet.lifetime];
+	        return [bullet.position.x, bullet.position.y, bullet.lifetime];
 	      });
 	    }
 	  }, {
@@ -973,7 +981,7 @@
 	
 	      setInterval(function () {
 	        (0, _communication.sendMsg)(_this2.getMessagePayload());
-	      }, 1000); //1000 / 16);
+	      }, 1000 / 16);
 	    }
 	  }, {
 	    key: 'createSoldiers',
@@ -1483,7 +1491,7 @@
 	    key: 'fire',
 	    value: function fire(frame) {
 	      if (frame % 5 == 0) {
-	        var bullet = new _Bullet2.default(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.id, frame);
+	        var bullet = new _Bullet2.default(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.id, Date.now());
 	        this.parent.add(bullet);
 	        var v = _Vector2.default.subVecs(this.target, this.position);
 	        bullet.velocity.copy(v.normalize().multiplyScalar(10));
@@ -1520,12 +1528,12 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
-	var BULLET_LIFETIME = 60;
+	var BULLET_LIFETIME = 1000;
 	
 	var Bullet = function (_Entity) {
 	  _inherits(Bullet, _Entity);
 	
-	  function Bullet(x, y, ownerId, startFrame) {
+	  function Bullet(x, y, ownerId) {
 	    _classCallCheck(this, Bullet);
 	
 	    var _this = _possibleConstructorReturn(this, (Bullet.__proto__ || Object.getPrototypeOf(Bullet)).call(this, x, y, 6, 6));
@@ -1533,7 +1541,7 @@
 	    _this.noGrav = true;
 	    _this.noFriction = true;
 	    _this.ownerId = ownerId;
-	    _this.startFrame = startFrame;
+	    _this.lifetime = Date.now();
 	    _this.type = 'bullet';
 	    _this.damagePoints = 0.1;
 	    _this.dontCollideWith = [_this.type, 'soldier'];
@@ -1541,14 +1549,9 @@
 	  }
 	
 	  _createClass(Bullet, [{
-	    key: 'setFrame',
-	    value: function setFrame(frame) {
-	      this.frame = frame;
-	    }
-	  }, {
 	    key: 'checkLifetime',
-	    value: function checkLifetime(currentFrame) {
-	      return currentFrame - this.startFrame > BULLET_LIFETIME;
+	    value: function checkLifetime() {
+	      return Date.now() - this.lifetime > BULLET_LIFETIME;
 	    }
 	  }]);
 	

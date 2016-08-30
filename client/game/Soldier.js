@@ -61,12 +61,12 @@ export default class Soldier extends Entity {
     let flameFrame = this.getJSONFrame(flame, frameNumber, 'flame');
 
     ctx.drawImage(
-      resources.image.flame.data, 
+      resources.image.flame.data,
       flameFrame.x,
       flameFrame.y,
       flameFrame.w,
       flameFrame.h,
-      this.position.x + flameX, 
+      this.position.x + flameX,
       this.position.y + flameY,
       flameFrame.w,
       flameFrame.h
@@ -99,7 +99,7 @@ export default class Soldier extends Entity {
     ctx.fill();
     ctx.closePath();
 
-    ctx.fillStyle = '#fff';    
+    ctx.fillStyle = '#fff';
     ctx.fillText(this.name, this.position.x, this.position.y - 18);
     ctx.restore();
   }
@@ -110,7 +110,7 @@ export default class Soldier extends Entity {
         this.position.x + this.size.x / 2,
         this.position.y + this.size.y / 2,
         this.id,
-        frame
+        Date.now()
       );
       this.parent.add(bullet);
       let v = Vector2.subVecs(this.target, this.position);
