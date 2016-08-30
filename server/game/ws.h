@@ -11,7 +11,9 @@ class WebsocketConnection {
   void handle();  // blocking
 
   void send(int type, const void *data, size_t size);
-  std::string session_id;  
+  std::string session_id;
+
+  NetSock *s;
 
  private:
   void handle_recv();
@@ -21,7 +23,6 @@ class WebsocketConnection {
   std::list<std::string> send_queue;
 
   std::atomic_bool end;
-  NetSock *s;
 };
 
 

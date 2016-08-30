@@ -85,8 +85,8 @@ void WebsocketConnection::handle_send() {
     send_queue_m.lock();
     if (send_queue.empty()) {
       send_queue_m.unlock();
-      std::this_thread::yield();
-      //usleep(10000);
+      //std::this_thread::yield();
+      usleep(10000);
       continue;
     }
 
@@ -94,9 +94,9 @@ void WebsocketConnection::handle_send() {
     send_queue.pop_front();
     send_queue_m.unlock();
 
-    printf("Sending packet: \n");
+    /*printf("Sending packet: \n");
     fwrite(packet.data(), packet.size(), 1, stdout);
-    fflush(stdout);
+    fflush(stdout);*/
     s->WriteAll(packet.data(), packet.size());
   }
 }
@@ -298,9 +298,9 @@ void WebsocketConnection::handle_recv() {
               root, false);
 
           // TODO
-          printf("%s:%u: received data!\n", s->GetStrIP(), s->GetPort());
+          /*printf("%s:%u: received data!\n", s->GetStrIP(), s->GetPort());
           fwrite(&ms_data[0], 1, ms_data.size(), stdout);
-          fflush(stdout);
+          fflush(stdout);*/
 
           if (!jret) {
             printf("%s:%u: failed to parse JSON\n",

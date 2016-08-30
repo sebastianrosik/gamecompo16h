@@ -73,15 +73,40 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
   Player *p = Player::GetBySessionID(ws->session_id);
 
   if (!j.isObject()) {
+    printf("%s:%u: expected object in JSON root\n",
+         ws->s->GetStrIP(), ws->s->GetPort());
     return;
   }
 
   if (!j.isMember("type")) {
+     printf("%s:%u: type missing\n",
+            ws->s->GetStrIP(), ws->s->GetPort());
     return;
   }
 
   Json::Value v = j["type"];
-  printf("type: %s\n", v.asCString());
 
+  if (!v.isString()) {
+     printf("%s:%u: type is not string\n",
+            ws->s->GetStrIP(), ws->s->GetPort());
+    return;
+  }
+
+  if (v.asString() == "hello") {
+    printf("%s:%u: says Hello! :)\n",
+            ws->s->GetStrIP(), ws->s->GetPort());
+    return;
+  }
+
+  if (v.asString() == "ready") {
+    return;
+  }  
+
+  if (v.asString() == "state") {
+    return;
+  }
+
+  printf("%s:%u: unknown type: %s\n",
+            ws->s->GetStrIP(), ws->s->GetPort(), v.asCString());
 }
 
