@@ -1065,18 +1065,38 @@
 	
 	      switch (msg.type) {
 	        case 'state':
-	          var bulletsByOwner = {};
+	          // let removedBulletsIds = [];
+	          // for (var bulletId in this.world.bullets) {
+	          //   let exists = false;
+	          //   msg.state.bullets.forEach(bullet => {
+	          //     if (bulletId === bullet[4]) {
+	          //       exists = true;
+	          //     }
+	          //   });
+	          //   if (!exists) {
+	          //     removedBulletsIds.push(bulletId);
+	          //   }
+	          // }
+	
+	          // removedBulletsIds.forEach(bulletId => {
+	          //   this.removeBullet(bulletId);
+	          // })
+	
+	          // for (var bulletId in this.world.bullets) {
+	          //   this.removeBullet(bulletId);
+	          // }
+	
 	          msg.state.bullets.forEach(function (bullet) {
 	            var x = bullet[0];
 	            var y = bullet[1];
 	            var time = bullet[2];
 	            var ownerId = bullet[3];
 	            var bulletId = bullet[4];
-	            _this.updateBullet(x, y, time, ownerId, bulletId);
-	            // if (!bulletsByOwner[ownerId]) {
-	            //   bulletsByOwner[ownerId] = [];
-	            // }
-	            // bulletsByOwner[ownerId].push(bullet);
+	            var ax = bullet[5];
+	            var ay = bullet[6];
+	            var vx = bullet[7];
+	            var vy = bullet[8];
+	            _this.updateBullet(x, y, time, ownerId, bulletId, ax, ay, vx, vy);
 	          });
 	          msg.state.players.forEach(function (player) {
 	            var id = player[0];
@@ -1121,7 +1141,11 @@
 	        points: this.myself.points,
 	        killed: this.myself.killed,
 	        x: this.myself.position.x,
-	        y: this.myself.position.y
+	        y: this.myself.position.y,
+	        ax: this.myself.acceleration.x,
+	        ay: this.myself.acceleration.y,
+	        vx: this.myself.velocity.x,
+	        vy: this.myself.velocity.y
 	      };
 	    }
 	  }, {
@@ -1326,6 +1350,13 @@
 	          cb(child);
 	        }
 	      });
+	    }
+	  }, {
+	    key: 'removeBullet',
+	    value: function removeBullet(id) {
+	      var bullet = this.world.bullets[id];
+	      bullet.parent && bullet.parent.remove(bullet);
+	      delete this.world.bullets[id];
 	    }
 	  }, {
 	    key: 'handleBulltes',
@@ -1766,6 +1797,19 @@
 	        if (stateData.killed) {
 	          this.kill();
 	        }
+	      }
+	
+	      if (typeof stateData.ax !== 'undefined') {
+	        this.acceleration.x = stateData.ax;
+	      }
+	      if (typeof stateData.ay !== 'undefined') {
+	        this.acceleration.y = stateData.ay;
+	      }
+	      if (typeof stateData.vx !== 'undefined') {
+	        this.velocity.x = stateData.vx;
+	      }
+	      if (typeof stateData.vy !== 'undefined') {
+	        this.velocity.y = stateData.vy;
 	      }
 	    }
 	  }, {

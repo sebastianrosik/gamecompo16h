@@ -32,18 +32,38 @@ export default class JetPackGame {
   message(msg) {
     switch(msg.type) {
       case 'state':
-        let bulletsByOwner = {};
+        // let removedBulletsIds = [];
+        // for (var bulletId in this.world.bullets) {
+        //   let exists = false;
+        //   msg.state.bullets.forEach(bullet => {
+        //     if (bulletId === bullet[4]) {
+        //       exists = true;
+        //     }
+        //   });
+        //   if (!exists) {
+        //     removedBulletsIds.push(bulletId);
+        //   }
+        // }
+
+        // removedBulletsIds.forEach(bulletId => {
+        //   this.removeBullet(bulletId);
+        // })
+        
+        // for (var bulletId in this.world.bullets) {
+        //   this.removeBullet(bulletId);
+        // }
+
         msg.state.bullets.forEach(bullet => {
           let x = bullet[0];
           let y = bullet[1];
           let time = bullet[2];
           let ownerId = bullet[3];
           let bulletId = bullet[4];
-          this.updateBullet(x, y, time, ownerId, bulletId);
-          // if (!bulletsByOwner[ownerId]) {
-          //   bulletsByOwner[ownerId] = [];
-          // }
-          // bulletsByOwner[ownerId].push(bullet);
+          let ax = bullet[5];
+          let ay = bullet[6];
+          let vx = bullet[7];
+          let vy = bullet[8];
+          this.updateBullet(x, y, time, ownerId, bulletId, ax, ay, vx, vy);
         });
         msg.state.players.forEach(player => {
           let id = player[0];
@@ -85,7 +105,11 @@ export default class JetPackGame {
         points: this.myself.points,
         killed: this.myself.killed,
         x: this.myself.position.x,
-        y: this.myself.position.y
+        y: this.myself.position.y,
+        ax: this.myself.acceleration.x,
+        ay: this.myself.acceleration.y,
+        vx: this.myself.velocity.x,
+        vy: this.myself.velocity.y
       }
   }
 
@@ -263,6 +287,12 @@ export default class JetPackGame {
     });
   }
 
+  removeBullet(id)
+ {
+  let bullet = this.world.bullets[id];
+  bullet.parent && bullet.parent.remove(bullet);
+  delete this.world.bullets[id]
+ }
   handleBulltes(frame) {
     let soldiers = this.world.soldiers.filter(s => !s.killed);
     this.eachBullet(child => {

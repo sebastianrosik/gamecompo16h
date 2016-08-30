@@ -126,6 +126,19 @@ export default class Soldier extends Entity {
       }
     }
 
+    if (typeof stateData.ax !== 'undefined') {
+      this.acceleration.x = stateData.ax;
+    }
+    if (typeof stateData.ay !== 'undefined') {
+      this.acceleration.y = stateData.ay;
+    }
+    if (typeof stateData.vx !== 'undefined') {
+      this.velocity.x = stateData.vx;
+    }
+    if (typeof stateData.vy !== 'undefined') {
+      this.velocity.y = stateData.vy;
+    }
+
   }
 
   draw(ctx, frame) {
