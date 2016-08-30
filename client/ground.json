@@ -1,0 +1,27 @@
+{ "frames": {
+   "ground.ase": {
+    "frame": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 32, "h": 32 },
+    "sourceSize": { "w": 32, "h": 32 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.1.8-dev",
+  "image": "/home/xa/gamecompo16h/client/ground.png",
+  "format": "RGBA8888",
+  "size": { "w": 32, "h": 32 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "ground", "opacity": 255, "blendMode": "normal" },
+   { "name": "jetpack", "opacity": 255, "blendMode": "normal" },
+   { "name": "flame", "opacity": 255, "blendMode": "normal" },
+   { "name": "gun", "opacity": 255, "blendMode": "normal" }
+  ]
+ }
+}

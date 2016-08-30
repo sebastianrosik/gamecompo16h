@@ -86,8 +86,8 @@ export default class JetPackGame {
    }
 
     if (bullet.ownerId === ownerId && bullet.lifetime == time) {
-      bullet.position.x = x;
-      bullet.position.y = y;
+      // bullet.position.x = x;
+      // bullet.position.y = y;
     }
   }
 

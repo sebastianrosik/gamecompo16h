@@ -37,7 +37,7 @@ function loadImage(file, callback) {
   image.src = file;
 }
 
-let files = ['flame', 'soldier', 'gun'];
+let files = ['flame', 'soldier', 'gun', 'ground'];
 let loaded = 0;
 var total = files.length * 2;
 

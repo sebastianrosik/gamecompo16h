@@ -69,7 +69,7 @@ export default class Soldier extends Entity {
     ctx.save();
     ctx.translate(
       this.position.x + this.size.x / 2, 
-      this.position.y + this.size.y /2
+      this.position.y + this.size.y / 2
     );
     ctx.rotate(this.targetAngle + Math.PI);
     ctx.translate(
@@ -87,6 +87,7 @@ export default class Soldier extends Entity {
   }
 
   drawFlameFrame(ctx, frameNumber) {
+    return;
     let flame = resources.json.flame;
 
     let flameX = 18;

@@ -979,7 +979,7 @@
 	  image.src = file;
 	}
 	
-	var files = ['flame', 'soldier', 'gun'];
+	var files = ['flame', 'soldier', 'gun', 'ground'];
 	var loaded = 0;
 	var total = files.length * 2;
 	
@@ -1120,8 +1120,8 @@
 	      }
 	
 	      if (bullet.ownerId === ownerId && bullet.lifetime == time) {
-	        bullet.position.x = x;
-	        bullet.position.y = y;
+	        // bullet.position.x = x;
+	        // bullet.position.y = y;
 	      }
 	    }
 	  }, {
@@ -1769,6 +1769,7 @@
 	  }, {
 	    key: 'drawFlameFrame',
 	    value: function drawFlameFrame(ctx, frameNumber) {
+	      return;
 	      var flame = _resources.resources.json.flame;
 	
 	      var flameX = 18;
