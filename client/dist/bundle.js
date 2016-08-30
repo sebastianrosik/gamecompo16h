@@ -729,7 +729,7 @@
 	        var entity = this.children[i];
 	        entity.velocity.add(entity.acceleration);
 	
-	        if (!entity.isFixed && !entity.noGrav) {
+	        if (!entity.isFixed && !entity.noGrav && entity.id === this.myId) {
 	          entity.velocity.add(this.gravity);
 	        }
 	
@@ -1141,6 +1141,7 @@
 	      var soldier = this.createSoldier(this.myId, null);
 	      this.myself = soldier;
 	      this.myself.name = this.nick;
+	      this.world.myId = this.myId;
 	
 	      // this.world.soldiers[0].position.x = 50;
 	      // this.world.soldiers[1].position.x = this.world.size.x - 50;
@@ -1276,6 +1277,15 @@
 	      this.onState && this.onState(state);
 	    }
 	  }, {
+	    key: 'eachBullet',
+	    value: function eachBullet(cb) {
+	      this.world.children.forEach(function (child) {
+	        if (child instanceof _Bullet2.default) {
+	          cb(child);
+	        }
+	      });
+	    }
+	  }, {
 	    key: 'handleBulltes',
 	    value: function handleBulltes(frame) {
 	      var _this4 = this;
@@ -1283,19 +1293,17 @@
 	      var soldiers = this.world.soldiers.filter(function (s) {
 	        return !s.killed;
 	      });
-	      this.world.children.forEach(function (child) {
-	        if (child instanceof _Bullet2.default) {
-	          if (child.checkLifetime(frame)) {
-	            _this4.world.remove(child);
-	          }
-	          for (var n = 0; n < soldiers.length; ++n) {
-	            if (child.ownerId !== soldiers[n].id) {
-	              var collision = _this4.world.getCollision(child, soldiers[n]);
-	              if (collision.x && collision.y) {
-	                _this4.addPoints(getSoldierById(_this4, child.ownerId), SINGLE_HIT_POINTS);
-	                soldiers[n].addDamage(child.damagePoints, child.ownerId);
-	                _this4.world.remove(child);
-	              }
+	      this.eachBullet(function (child) {
+	        if (child.checkLifetime(frame)) {
+	          _this4.world.remove(child);
+	        }
+	        for (var n = 0; n < soldiers.length; ++n) {
+	          if (child.ownerId !== soldiers[n].id) {
+	            var collision = _this4.world.getCollision(child, soldiers[n]);
+	            if (collision.x && collision.y) {
+	              _this4.addPoints(getSoldierById(_this4, child.ownerId), SINGLE_HIT_POINTS);
+	              soldiers[n].addDamage(child.damagePoints, child.ownerId);
+	              _this4.world.remove(child);
 	            }
 	          }
 	        }

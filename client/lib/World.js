@@ -98,7 +98,7 @@ export default class World extends Abstract {
       let entity = this.children[i];
       entity.velocity.add(entity.acceleration);
 
-      if (!entity.isFixed && !entity.noGrav) {
+      if (!entity.isFixed && !entity.noGrav && entity.id === this.myId) {
         entity.velocity.add(this.gravity);
       }
 

@@ -102,6 +102,7 @@ export default class JetPackGame {
     let soldier = this.createSoldier(this.myId, null);
     this.myself = soldier;
     this.myself.name = this.nick;
+    this.world.myId = this.myId;
 
     // this.world.soldiers[0].position.x = 50;
     // this.world.soldiers[1].position.x = this.world.size.x - 50;
@@ -218,11 +219,18 @@ export default class JetPackGame {
     this.onState && this.onState(state);
   }
 
-  handleBulltes(frame) {
-    let soldiers = this.world.soldiers.filter(s => !s.killed);
+  eachBullet(cb) {
     this.world.children.forEach(child => {
       if (child instanceof Bullet) {
-        if (child.checkLifetime(frame)) {
+        cb(child);
+      }
+    });
+  }
+
+  handleBulltes(frame) {
+    let soldiers = this.world.soldiers.filter(s => !s.killed);
+    this.eachBullet(child => {
+      if (child.checkLifetime(frame)) {
           this.world.remove(child);
         }
         for (let n = 0; n < soldiers.length; ++n) {
@@ -235,8 +243,7 @@ export default class JetPackGame {
             }
           }
         }
-      }
-    });
+    })
   }
 }
 
