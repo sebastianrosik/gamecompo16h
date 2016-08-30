@@ -9,7 +9,15 @@
   <body>
     <section id="setup" class="screen">
       <div id="connerr" class="hidden">CONN ERR</div>
-      <form><label>Nick: </label> <input type="text" maxlength="32" name="nick"></form>
+      <form>
+        <p><label>Nick: </label> <input type="text" maxlength="32" name="nick" autofocus>
+        </p>
+        <p><label>Game ID: </label> <input type="text" maxlength="10" name="game">
+        </p>
+        <p>
+          <button>Join</button>
+        </p>
+      </form>
     </section>
     <section id="gameplay" class="screen hidden">
       <div id="canvas"></div>

@@ -71,7 +71,7 @@ function onState(state) {
   }
 }
 
-function startGame(nick) {
+function startGame(nick, gameId) {
   renderer = new Renderer({canvas});
   world = new World(CWIDTH, CHEIGHT);
   game = new Game({world, renderer, keyboard, mouse, nick, onState, onPoints: function (soldier, points) {
@@ -82,6 +82,7 @@ function startGame(nick) {
   loop();
   window.game = game;
   createInfo(game);
+  console.log(gameId)
 }
 
 function loop() {
@@ -104,14 +105,14 @@ function resize() {
   calcOffset();
 }
 
-function onNick(nick) {
+function onNick(nick, game) {
   showScreen('gameplay');
   sendMsg({
     type: "ready",
     nick,
-    game: window.GAME_ID
+    game
   });
- startGame(nick);
+ startGame(nick, game);
 }
 
 function showScreen(screenName) {
@@ -122,17 +123,22 @@ function showScreen(screenName) {
   document.querySelector('#' + screenName).classList.remove('hidden');
 }
 
-function bindEvents() {
-  document.querySelector('#setup form').addEventListener('submit', e => {
-    e.preventDefault();
-    if (!isConnected()) {
-      showConnErr();
-      return false;
-    }
-    let nick = document.querySelector('#setup form [name=nick]');
-    onNick(nick.value);
+function onSubmit(e) {
+  e.preventDefault();
+  if (!isConnected()) {
+    showConnErr();
     return false;
-  });
+  }
+  let nick = document.querySelector('#setup form [name=nick]');
+  let gameInp = document.querySelector('#setup form [name=game]');
+  onNick(nick.value, gameInp.value);
+  console.log('submit', nick.value, gameInp.value)
+  return false;
+}
+
+function bindEvents() {
+  document.querySelector('#setup form').addEventListener('submit', onSubmit);
+  document.querySelector('#setup form button').addEventListener('click', onSubmit)
 }
 
 function hideConnErr() {
