@@ -89,6 +89,10 @@ void Player::UpdateState(Json::Value &j) {
   this->x = p["x"].asDouble();
   this->y = p["y"].asDouble();
   this->killed = p["killed"].asBool();
+  this->ax = p["ax"].asDouble();
+  this->ay = p["ay"].asDouble();
+  this->vx = p["vx"].asDouble();
+  this->vy = p["vy"].asDouble();
 
   this->bullets.resize(0);
 
@@ -98,6 +102,11 @@ void Player::UpdateState(Json::Value &j) {
     nb.y = b[1].asDouble();
     nb.lifetime = b[2].asDouble();
     nb.id = b[3].asString();
+    nb.ax = b[4].asDouble();    
+    nb.ay = b[5].asDouble();    
+    nb.vx = b[6].asDouble();    
+    nb.vy = b[7].asDouble(); 
+    
     this->bullets.push_back(nb);
   }
 }
@@ -142,7 +151,7 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
       return;
     }
 
-    p->nick = j["nick"].asString();    
+    p->nick = j["nick"].asString();
 
     Game *g = Game::GetByID(gid);
 
@@ -150,15 +159,19 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
       printf("%s:%u: player %s removed from game %s\n",
             ws->s->GetStrIP(), ws->s->GetPort(),
             p->id.c_str(), p->game->id.c_str());
+      games_m.lock();
       p->game->RemovePlayer(p);
       p->game = nullptr;
+      games_m.unlock();
     }
 
     if (p->game == nullptr) {
       p->game = g;
+
       g->players_m.lock();
       g->players.push_back(p);
-      g->players_m.unlock();        
+      g->players_m.unlock();
+
       printf("%s:%u: player %s added to game %s\n",
             ws->s->GetStrIP(), ws->s->GetPort(),
         p->id.c_str(), p->game->id.c_str());
@@ -216,9 +229,15 @@ void GameMaster() {
             "  \"points\": %f, "
             "  \"killed\": %s, "
             "  \"x\": %f, "
-            "  \"y\": %f } ] ",
+            "  \"y\": %f, "
+            "  \"ax\": %f, "
+            "  \"ay\": %f, "
+            "  \"vx\": %f, "
+            "  \"vy\": %f "
+            " } ] ",
             p->id.c_str(), p->nick.c_str(), p->health, p->points,
-            p->killed ? "true" : "false", p->x, p->y);
+            p->killed ? "true" : "false", p->x, p->y, p->ax, p->ay,
+            p->vx, p->vy);
         s += buf;
 
         for (const Bullet& bb : p->bullets) {
@@ -226,8 +245,10 @@ void GameMaster() {
             bullets += ", ";
           }
 
-          snprintf(buf, 4096, "[ %f, %f, %f, \"%s\", \"%s\" ]",
-              bb.x, bb.y, bb.lifetime, p->id.c_str(), bb.id.c_str());
+          snprintf(buf, 4096, "[ %f, %f, %f, \"%s\", \"%s\", %f, %f, %f, %f ]",
+              bb.x, bb.y, bb.lifetime, p->id.c_str(), bb.id.c_str(),
+              bb.ax, bb.ay, bb.vx, bb.vy
+              );
           bullets += buf;
         }
         p->m.unlock();
