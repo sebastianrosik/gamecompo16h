@@ -815,12 +815,12 @@
 	  load: function load(callback) {
 	    files.forEach(function (file) {
 	      loadJSON('./' + file + '.json', function (json) {
-	        resources.json[file] = json;
+	        resources.json[file] = { data: json, name: file };
 	        loaded++;
 	        check(callback);
 	      });
 	      loadImage('./' + file + '.png', function (image) {
-	        resources.image[file] = image;
+	        resources.image[file] = { data: image, name: file };
 	        loaded++;
 	        check(callback);
 	      });
@@ -1306,7 +1306,20 @@
 	var SOLDIER_WIDTH = 32;
 	var SOLDIER_HEIGHT = 32;
 	
-	function getJSONFrame(resource, frameNumber) {}
+	function getFrameCount(frames) {
+	  var c = 0;
+	  for (var i in frames) {
+	    c++;
+	  }
+	  return c;
+	}
+	
+	function getJSONFrame(resource, frameNumber, resourceName) {
+	  var totalFrames = getFrameCount(resource.frames);
+	  var relativeFrame = frameNumber % totalFrames;
+	  var name = resourceName + ' ' + relativeFrame + '.ase';
+	  return resource[name];
+	}
 	
 	var Soldier = function (_Entity) {
 	  _inherits(Soldier, _Entity);
@@ -1366,14 +1379,14 @@
 	    }
 	  }, {
 	    key: 'drawFrame',
-	    value: function drawFrame(ctx, frameName) {
+	    value: function drawFrame(ctx, frameNumber) {
 	      ctx.save();
-	      ctx.drawImage(_resources.resources.image.soldier, this.position.x, this.position.y);
+	      ctx.drawImage(_resources.resources.image.soldier.data, this.position.x, this.position.y);
 	      ctx.restore();
 	
 	      var flame = _resources.resources.json.flame;
 	
-	      var flameFrame = getJSONFrame(flame, frameNumber);
+	      var flameFrame = getJSONFrame(flame, frameNumber, 'flame');
 	    }
 	  }, {
 	    key: 'draw',
