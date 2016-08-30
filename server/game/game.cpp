@@ -204,7 +204,7 @@ void GameMaster() {
             "  \"nick\": \"%s\", "
             "  \"health\": %f, "
             "  \"points\": %f, "
-            "  \"killed\": \"%s\", "
+            "  \"killed\": %s, "
             "  \"x\": %f, "
             "  \"y\": %f } ] ",
             p->id.c_str(), p->nick.c_str(), p->health, p->points,
