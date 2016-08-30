@@ -40,6 +40,10 @@ export default class Sprite extends Abstract {
     ctx.restore();
   }
 
+  drawFrame(ctx, frame) {
+    
+  }
+
   draw(ctx, frame) {}
 
   drawChildren(ctx, frame, debug) {

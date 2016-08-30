@@ -3,6 +3,8 @@ import Vector2 from './lib/Vector2';
 import World from './lib/World';
 import {keyboard, mouse} from './lib/input';
 import {socket} from './communication';
+import {resources} from './resources'
+
 
 import Game from './game/JetPackGame';
 
@@ -81,5 +83,7 @@ function resize() {
   calcOffset();
 }
 
-window.addEventListener('load', init);
+window.addEventListener('load', () => {
+  resources.load(init)
+});
 window.addEventListener('resize', resize);

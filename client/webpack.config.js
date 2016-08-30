@@ -14,6 +14,10 @@ module.exports = {
               query: {
                 presets: ['es2015']
               }
+            },{
+              test: /\.json$/,
+              exclude: /(node_modules|bower_components)/,
+              loader: 'json', // 'babel-loader' is also a legal name to reference
             }
         ]
     }

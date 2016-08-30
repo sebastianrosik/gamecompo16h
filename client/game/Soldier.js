@@ -1,6 +1,7 @@
 import Entity from '../lib/Entity';
 import Vector2 from '../lib/Vector2';
 import {getRandomName} from '../lib/generators';
+import {resources} from '../resources';
 
 import Bullet from './Bullet';
 
@@ -23,7 +24,7 @@ export default class Soldier extends Entity {
 
   addDamage(damage = 0.1, killerId) {
     this.health -= damage;
-    
+
     if (this.health < 0) {
       this.health = 0;
     }
@@ -44,8 +45,20 @@ export default class Soldier extends Entity {
     }
   }
 
+  drawFrame(ctx, frame) {
+    ctx.save();
+    ctx.drawImage(resources.image.soldier, this.position.x, this.position.y);
+    ctx.restore();
+
+    let flame = resources.json.flame;
+
+    // let flameFrame = getJSONFrame(flame, frame);
+
+  }
+
   draw(ctx, frame) {
     Entity.prototype.draw.call(this, ctx, frame);
+    this.drawFrame(ctx, frame);
     ctx.save();
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.beginPath();
