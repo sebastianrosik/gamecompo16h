@@ -361,8 +361,8 @@ void WebsocketConnection::handle_recv() {
 }
 
 #define BUFSIZE 4096
-void handle_new_connection(NetSock *_s) {
-  std::unique_ptr<NetSock> s(_s);
+void handle_new_connection(NetSock *s) {
+  //std::unique_ptr<NetSock> s(_s);
   char buf[BUFSIZE + 1] = {0};
   printf("%s:%u: new connection\n",
          s->GetStrIP(), s->GetPort());
@@ -484,8 +484,10 @@ void handle_new_connection(NetSock *_s) {
   printf("%s:%u: switched to websocket\n",
          s->GetStrIP(), s->GetPort());
 
-  WebsocketConnection ws(s.get(), proto);
-  ws.handle();
+  WebsocketConnection *ws = new WebsocketConnection(s, proto);
+  ws->handle();
+
+  // meeeeemleak ;f
 }
 
 int main(void) {
