@@ -10,6 +10,7 @@ export default class Bullet extends Entity {
     this.ownerId = ownerId;
     this.startFrame = startFrame;
     this.type = 'bullet';
+    this.damagePoints = 0.1;
     this.dontCollideWith = [this.type, 'soldier'];
   }
 
