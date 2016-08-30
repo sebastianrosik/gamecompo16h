@@ -146,6 +146,14 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
       return;
     }
 
+    std::string nick = j["nick"].asString();
+
+    if (strchr(nick.c_str(), '\"') ||
+        strchr(nick.c_str(), '\n') ||
+        strchr(nick.c_str(), '\0')) {
+      return;
+    }
+
     std::string gid = j["game"].asString();
     if (gid.size() > 12) {
       return;

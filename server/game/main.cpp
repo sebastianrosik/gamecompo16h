@@ -433,6 +433,11 @@ void handle_new_connection(NetSock *s) {
   }
 
   std::string proto(proto_, tmp - proto_);
+  if (strchr(proto.c_str(), '\"') ||
+      strchr(proto.c_str(), '\n') ||
+      strchr(proto.c_str(), '\0')) {
+    return;
+  }  
 
   // Calc reply.
   k += WEBSOCKET_GUID;
