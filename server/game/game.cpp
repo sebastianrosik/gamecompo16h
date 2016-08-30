@@ -173,15 +173,19 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
     }
 
     if (p->game == nullptr) {
-      p->game = g;
+      
 
       g->players_m.lock();
-      g->players.push_back(p);
-      g->players_m.unlock();
-
-      printf("%s:%u: player %s added to game %s\n",
+      if (g->players.size() >= 4) {
+        // Nope, sorry.        
+      } else {
+        p->game = g;
+        g->players.push_back(p);
+        printf("%s:%u: player %s added to game %s\n",
             ws->s->GetStrIP(), ws->s->GetPort(),
-        p->id.c_str(), p->game->id.c_str());
+        p->id.c_str(), p->game->id.c_str());        
+      }
+      g->players_m.unlock();
     }
 
     return;
