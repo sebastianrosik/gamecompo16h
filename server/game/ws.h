@@ -5,6 +5,8 @@
 #include <string>
 #include "NetSock.h"
 
+class Player;
+
 class WebsocketConnection {
  public:
   WebsocketConnection(NetSock *s, const std::string& session_id);
@@ -14,6 +16,7 @@ class WebsocketConnection {
   std::string session_id;
 
   NetSock *s;
+  Player *p;
 
  private:
   void handle_recv();
