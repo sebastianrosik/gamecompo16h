@@ -107,18 +107,25 @@ export default class Soldier extends Entity {
   }
 
   setState(stateData, currentId) {
+    if (this.health > stateData.health) {
     this.health = stateData.health;
+    }
+    if (this.points > stateData.points) {
+      this.points = stateData.points;
+    }
+
     this.name = stateData.nick;
     if (this.id !== currentId) {
       this.position.x = stateData.x;
       this.position.y = stateData.y;
     }
-
-    this.points = stateData.points;
-    this.killed = stateData.killed;
-    if (stateData.killed) {
-      this.kill();
+    if (stateData.killed && !this.killed) {
+      this.killed = stateData.killed;
+      if (stateData.killed) {
+        this.kill();
+      }
     }
+
   }
 
   draw(ctx, frame) {
