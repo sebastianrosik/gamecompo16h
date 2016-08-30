@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cstdio>
 #include <thread>
 #include <list>
@@ -5,14 +6,19 @@
 #include <endian.h>
 #include <string.h>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <thread>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+#include <json/json.h>
 
 #include "NetSock.h"
+#include "ws.h"
+#include "game.h"
 
 const char *WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -28,7 +34,69 @@ const int S_PACKET_READY = 7;  // Complete packet is ready for looking at.
 const int MS_NO_DATA = 0; // Waiting for new frame.
 const int MS_DATA_STARTED = 1; // Has some data, waiting for new frames.
 
-void handle_websocket(NetSock *s) {
+const int SEND_DATA = 1;
+const int SEND_PONG = 0xa;
+const int SEND_PING = 0x9;
+
+void WebsocketConnection::send(int type, const void *data, size_t size) {
+  uint8_t header[2] = {
+    (uint8_t)((1 << 7) | type),
+    (uint8_t)(size > 0xffff ? 127 :
+                size >= 126 ? 126 :
+                  size)
+  };
+
+  std::string packet;
+  packet.append((const char*)header, 2);
+
+  if (header[1] == 127) {
+    uint64_t len_8 = htobe64(size);
+    packet.append((const char*)&len_8, 8);
+  } else if (header[1] == 126) {
+    uint16_t len_2 = htobe16(size);
+    packet.append((const char*)&len_2, 2);    
+  }
+
+  packet.append((const char*)data, size);
+
+  send_queue_m.lock();
+  send_queue.push_back(packet);
+  send_queue_m.unlock();
+}
+
+WebsocketConnection::WebsocketConnection(NetSock *s) {
+  this->s = s;
+  this->end = false;
+}
+
+void WebsocketConnection::handle() {
+  std::thread sender(&WebsocketConnection::handle_send, this);
+  handle_recv();
+  sender.join();
+}
+
+void WebsocketConnection::handle_send() {
+  while (!this->end.load()) {
+    send_queue_m.lock();
+    if (send_queue.empty()) {
+      send_queue_m.unlock();
+      std::this_thread::yield();
+      //usleep(10000);
+      continue;
+    }
+
+    std::string packet = send_queue.front();
+    send_queue.pop_front();
+    send_queue_m.unlock();
+
+    printf("Sending packet: \n");
+    fwrite(packet.data(), packet.size(), 1, stdout);
+    fflush(stdout);
+    s->WriteAll(packet.data(), packet.size());
+  }
+}
+
+void WebsocketConnection::handle_recv() {
   std::vector<uint8_t> data;
   std::vector<uint8_t> mask;  
   std::vector<uint8_t> payload;
@@ -41,9 +109,8 @@ void handle_websocket(NetSock *s) {
   std::vector<uint8_t> ms_data;
   bool data_ready = false;
   int ms_state = MS_NO_DATA;
-
   
-  for (;/* end? */;) {
+  while (!this->end.load()) {
     //printf("%u %u\n", data.size(), state_needs);
     //fflush(stdout);
     if (data.size() < state_needs) {
@@ -112,7 +179,7 @@ void handle_websocket(NetSock *s) {
 
       case S_LEN_READY:
         if (payload_len > 16 * 1024 * 1024) {
-          printf("%s:%u: nope nope nope\n",
+          printf("%s:%u: nope nope nope (1)\n",
              s->GetStrIP(), s->GetPort());
           return;
         }
@@ -165,7 +232,7 @@ void handle_websocket(NetSock *s) {
 
         if (opcode == 0x9 /*PING*/) {
           printf("%s:%u: received PING\n", s->GetStrIP(), s->GetPort());
-          // TODO: Send pong.
+          send(SEND_PONG, &state_data[0], state_data.size());
         } else if (opcode == 0xA /*PONG*/) {
           printf("%s:%u: received PONG\n", s->GetStrIP(), s->GetPort());
           // Ignore.
@@ -177,7 +244,7 @@ void handle_websocket(NetSock *s) {
           }
 
           if (payload_len + ms_data.size() > 16 * 1024 * 1024) {
-            printf("%s:%u: nope nope nope\n",
+            printf("%s:%u: nope nope nope (2)\n",
               s->GetStrIP(), s->GetPort());
             return;
           }
@@ -215,14 +282,28 @@ void handle_websocket(NetSock *s) {
         } else {
           printf("%s:%u: unknown opcode %.2x\n", s->GetStrIP(), s->GetPort(),
                  opcode);
-          return;
+          //return;
         }
 
         if (data_ready) {
+          Json::Value root;
+          Json::Reader r;
+          bool jret = r.parse(
+              std::string((const char*)&ms_data[0], ms_data.size()),
+              root, false);
+
           // TODO
           printf("%s:%u: received data!\n", s->GetStrIP(), s->GetPort());
           fwrite(&ms_data[0], 1, ms_data.size(), stdout);
           fflush(stdout);
+
+          if (!jret) {
+            printf("%s:%u: failed to parse JSON\n",
+                   s->GetStrIP(), s->GetPort());
+            return;
+          }
+
+          GameHandleRecv(this, root);
         }
 
         state = S_START;
@@ -230,12 +311,7 @@ void handle_websocket(NetSock *s) {
         continue;
       }
       break;
-
-
     }
-
-
-
   }  
 }
 
@@ -342,7 +418,8 @@ void handle_new_connection(NetSock *_s) {
       "Upgrade: websocket\r\n"
       "Connection: Upgrade\r\n"
       "Sec-WebSocket-Accept: %s\r\n"
-      "Sec-WebSocket-Protocol: %s\r\n"      
+      "Sec-WebSocket-Protocol: %s\r\n"
+      "Sec-WebSocket-Version: 13\r\n"
       "\r\n", accept_key_b64, proto.c_str());
 
   s->WriteAll(response, strlen(response));
@@ -352,7 +429,8 @@ void handle_new_connection(NetSock *_s) {
   printf("%s:%u: switched to websocket\n",
          s->GetStrIP(), s->GetPort());
 
-  handle_websocket(s.get());
+  WebsocketConnection ws(s.get());
+  ws.handle();
 }
 
 int main(void) {
