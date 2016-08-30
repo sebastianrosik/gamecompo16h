@@ -112,6 +112,7 @@ void WebsocketConnection::handle_send() {
     fwrite(packet.data(), packet.size(), 1, stdout);
     fflush(stdout);*/
     if (s->WriteAll(packet.data(), packet.size()) == 0) {
+      s->Disconnect();
       printf("%s:%u: failed while sending\n",
          s->GetStrIP(), s->GetPort());   
       this->end = true;
@@ -146,6 +147,7 @@ void WebsocketConnection::handle_recv() {
       uint8_t buf[4096];
       int ret = s->Read(buf, sizeof(buf));
       if (ret == 0) {
+        s->Disconnect();
         printf("%s:%u: disconnected\n",
              s->GetStrIP(), s->GetPort());
         return;
@@ -357,6 +359,7 @@ void handle_new_connection(NetSock *_s) {
   for(;;) {
     int ret = s->Read(buf + idx, BUFSIZE - idx);
     if (ret == 0) {
+      s->Disconnect();      
       printf("%s:%u: disconnected\n",
              s->GetStrIP(), s->GetPort());
       return;
@@ -453,6 +456,7 @@ void handle_new_connection(NetSock *_s) {
       "\r\n", accept_key_b64, proto.c_str());
 
   if (s->WriteAll(response, strlen(response)) == 0) {
+    s->Disconnect();
     printf("%s:%u: failed while sending success info\n",
         s->GetStrIP(), s->GetPort());
     return;
