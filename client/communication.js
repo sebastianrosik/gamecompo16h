@@ -9,5 +9,5 @@ socket.onopen = function () {
 }
 
 socket.onmessage = function (msgraw) {
-  console.log(JSON.parse(msgraw));
+  console.log(JSON.parse(msgraw.data));
 }
