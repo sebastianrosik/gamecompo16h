@@ -149,8 +149,7 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
     std::string nick = j["nick"].asString();
 
     if (strchr(nick.c_str(), '\"') ||
-        strchr(nick.c_str(), '\n') ||
-        strchr(nick.c_str(), '\0')) {
+        strchr(nick.c_str(), '\n')) {
       return;
     }
 
