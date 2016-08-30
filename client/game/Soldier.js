@@ -170,6 +170,7 @@ export default class Soldier extends Entity {
         this.id,
         Date.now()
       );
+      this.parent.bullets[bullet.id] = bullet;
       this.parent.add(bullet);
       let v = Vector2.subVecs(this.target, this.position);
       bullet.velocity.copy(v.normalize().multiplyScalar(20));

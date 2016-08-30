@@ -1048,6 +1048,8 @@
 	    this.keyboard = keyboard;
 	    this.mouse = mouse;
 	    this.nick = nick;
+	    this.world.soldiers = [];
+	    this.world.bullets = {};
 	    this.createGround();
 	    this.createSoldiers();
 	    this.onPoints = onPoints;
@@ -1069,7 +1071,8 @@
 	            var y = bullet[1];
 	            var time = bullet[2];
 	            var ownerId = bullet[3];
-	            // this.updateBullet(x, y, time, ownerId);
+	            var bulletId = bullet[4];
+	            _this.updateBullet(x, y, time, ownerId, bulletId);
 	            // if (!bulletsByOwner[ownerId]) {
 	            //   bulletsByOwner[ownerId] = [];
 	            // }
@@ -1089,25 +1092,25 @@
 	    }
 	  }, {
 	    key: 'updateBullet',
-	    value: function updateBullet(x, y, time, ownerId) {
-	      var _this2 = this;
+	    value: function updateBullet(x, y, time, ownerId, bulletId) {
+	      var bullet = this.world.bullets[bulletId];
+	      if (!bullet) {
+	        this.addBullet(x, y, time, ownerId, bulletId);
+	        return;
+	      }
 	
-	      this.eachBullet(function (bullet) {
-	        if (bullet.ownerId === ownerId && bullet.lifetime == time) {
-	          // update
-	          bullet.position.x = x;
-	          bullet.position.y = y;
-	        } else {
-	          _this2.addBullet(x, y, time, ownerId);
-	          // add bullet
-	        }
-	      });
+	      if (bullet.ownerId === ownerId && bullet.lifetime == time) {
+	        bullet.position.x = x;
+	        bullet.position.y = y;
+	      }
 	    }
 	  }, {
 	    key: 'addBullet',
-	    value: function addBullet(x, y, time, ownerId) {
+	    value: function addBullet(x, y, time, ownerId, bulletId) {
 	      var bullet = new _Bullet2.default(x, y, ownerId);
+	      bullet.id = bulletId;
 	      bullet.lifetime = time;
+	      this.world.bullets[bullet.id] = bullet;
 	      this.add(bullet);
 	    }
 	  }, {
@@ -1124,10 +1127,10 @@
 	  }, {
 	    key: 'getBulletsState',
 	    value: function getBulletsState() {
-	      var _this3 = this;
+	      var _this2 = this;
 	
 	      return this.world.children.filter(function (child) {
-	        return child.ownerId == _this3.myself.id;
+	        return child.ownerId == _this2.myself.id;
 	      }).map(function (bullet) {
 	        return [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id];
 	      });
@@ -1144,10 +1147,10 @@
 	  }, {
 	    key: 'startSendingMessages',
 	    value: function startSendingMessages() {
-	      var _this4 = this;
+	      var _this3 = this;
 	
 	      setInterval(function () {
-	        (0, _communication.sendMsg)(_this4.getMessagePayload());
+	        (0, _communication.sendMsg)(_this3.getMessagePayload());
 	      }, 1000 / 16);
 	    }
 	  }, {
@@ -1171,7 +1174,6 @@
 	  }, {
 	    key: 'createSoldiers',
 	    value: function createSoldiers() {
-	      this.world.soldiers = [];
 	      var x = 20;
 	      var y = 100;
 	      var distance = 100;
@@ -1328,22 +1330,23 @@
 	  }, {
 	    key: 'handleBulltes',
 	    value: function handleBulltes(frame) {
-	      var _this5 = this;
+	      var _this4 = this;
 	
 	      var soldiers = this.world.soldiers.filter(function (s) {
 	        return !s.killed;
 	      });
 	      this.eachBullet(function (child) {
 	        if (child.checkLifetime(frame)) {
-	          _this5.world.remove(child);
+	          _this4.world.remove(child);
 	        }
 	        for (var n = 0; n < soldiers.length; ++n) {
 	          if (child.ownerId !== soldiers[n].id) {
-	            var collision = _this5.world.getCollision(child, soldiers[n]);
+	            var collision = _this4.world.getCollision(child, soldiers[n]);
 	            if (collision.x && collision.y) {
-	              _this5.addPoints(getSoldierById(_this5, child.ownerId), SINGLE_HIT_POINTS);
+	              _this4.addPoints(getSoldierById(_this4, child.ownerId), SINGLE_HIT_POINTS);
 	              soldiers[n].addDamage(child.damagePoints, child.ownerId);
-	              _this5.world.remove(child);
+	              _this4.world.remove(child);
+	              delete _this4.world.bullets[child.id];
 	            }
 	          }
 	        }
@@ -1795,6 +1798,7 @@
 	      }
 	      if (frame % 15 == 0) {
 	        var bullet = new _Bullet2.default(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.id, Date.now());
+	        this.parent.bullets[bullet.id] = bullet;
 	        this.parent.add(bullet);
 	        var v = _Vector2.default.subVecs(this.target, this.position);
 	        bullet.velocity.copy(v.normalize().multiplyScalar(20));

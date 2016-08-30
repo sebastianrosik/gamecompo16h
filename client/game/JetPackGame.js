@@ -18,12 +18,15 @@ export default class JetPackGame {
     this.keyboard = keyboard;
     this.mouse = mouse;
     this.nick = nick;
+    this.world.soldiers = [];
+    this.world.bullets = {};
     this.createGround();
     this.createSoldiers();
     this.onPoints = onPoints;
     this.onState = onState;
     this.startSendingMessages();
     this.state = JetPackGame.STATE_GAMEPLAY;
+
   }
 
   message(msg) {
@@ -35,7 +38,8 @@ export default class JetPackGame {
           let y = bullet[1];
           let time = bullet[2];
           let ownerId = bullet[3];
-          // this.updateBullet(x, y, time, ownerId);
+          let bulletId = bullet[4];
+          this.updateBullet(x, y, time, ownerId, bulletId);
           // if (!bulletsByOwner[ownerId]) {
           //   bulletsByOwner[ownerId] = [];
           // }
@@ -54,22 +58,24 @@ export default class JetPackGame {
     }
   }
 
-  updateBullet(x, y, time, ownerId) {
-    this.eachBullet(bullet => {
-      if (bullet.ownerId === ownerId && bullet.lifetime == time) {
-        // update
-        bullet.position.x = x;
-        bullet.position.y = y;
-      } else {
-        this.addBullet(x, y, time, ownerId)
-        // add bullet
-      }
-    })
+  updateBullet(x, y, time, ownerId, bulletId) {
+   let bullet = this.world.bullets[bulletId];
+   if (!bullet) {
+      this.addBullet(x, y, time, ownerId, bulletId)
+    return;
+   }
+
+    if (bullet.ownerId === ownerId && bullet.lifetime == time) {
+      bullet.position.x = x;
+      bullet.position.y = y;
+    }
   }
 
-  addBullet(x, y, time, ownerId) {
+  addBullet(x, y, time, ownerId, bulletId) {
     let bullet = new Bullet(x, y, ownerId);
+    bullet.id = bulletId;
     bullet.lifetime = time;
+    this.world.bullets[bullet.id] = bullet;
     this.add(bullet);
   }
 
@@ -123,7 +129,6 @@ export default class JetPackGame {
   }
 
   createSoldiers() {
-    this.world.soldiers = [];
     let x = 20;
     let y = 100;
     let distance = 100;
@@ -271,6 +276,7 @@ export default class JetPackGame {
               this.addPoints(getSoldierById(this, child.ownerId), SINGLE_HIT_POINTS);
               soldiers[n].addDamage(child.damagePoints, child.ownerId);
               this.world.remove(child);
+              delete this.world.bullets[child.id];
             }
           }
         }
