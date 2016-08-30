@@ -303,7 +303,7 @@ int
 NetSock::Read(void *Buffer, int Size)
 {
   if(this->socket == -1)
-    return -1;
+    return 0;
 
   // Windows requires a char* cast here. Won't make a difference for
   // *nix I guess.
