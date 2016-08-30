@@ -155,8 +155,8 @@ void WebsocketConnection::handle_recv() {
       }
 
       size_t idx = data.size();
-      printf("%llu %i %llu\n", data.size(), ret, data.size() + ret);
-      fflush(stdout);
+      //printf("%llu %i %llu\n", data.size(), ret, data.size() + ret);
+      //fflush(stdout);
       data.resize(data.size() + ret);
       memcpy(&data[0] + idx, buf, ret);
       continue;
@@ -417,6 +417,10 @@ void handle_new_connection(NetSock *_s) {
 
   tmp = proto_;
   while(*tmp != '\n' && *tmp != '\r') tmp++;
+
+  if (tmp - proto_ > 50) {
+    return;
+  }
 
   std::string proto(proto_, tmp - proto_);
 

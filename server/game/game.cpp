@@ -132,9 +132,18 @@ void GameHandleRecv(WebsocketConnection *ws, Json::Value &j) {
   }
 
   if (v.asString() == "ready") {
-    p->nick = j["nick"].asString();
+    if (j["nick"].asString().size() > 32) {
+      return;
+    }
 
-    Game *g = Game::GetByID(j["game"].asString());
+    std::string gid = j["game"].asString();
+    if (gid.size() > 12) {
+      return;
+    }
+
+    p->nick = j["nick"].asString();    
+
+    Game *g = Game::GetByID(gid);
 
     if (p->game != nullptr && p->game != g) {
       printf("%s:%u: player %s removed from game %s\n",
