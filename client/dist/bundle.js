@@ -79,7 +79,7 @@
 	    world,
 	    token,
 	    frame = 0;
-	var debug = true;
+	var debug = false;
 	var offset = new _Vector2.default();
 	
 	function renderSoldierInfo(soldier) {
@@ -1918,6 +1918,15 @@
 	    value: function checkLifetime() {
 	      return Date.now() - this.lifetime > BULLET_LIFETIME;
 	    }
+	  }, {
+	    key: 'draw',
+	    value: function draw(ctx, frame) {
+	      ctx.save();
+	      ctx.fillStyle = '#fff';
+	      ctx.arc(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.size.x / 2, Math.PI * 2, 0, false);
+	      ctx.fill();
+	      ctx.restore();
+	    }
 	  }]);
 	
 	  return Bullet;
@@ -1935,9 +1944,13 @@
 	  value: true
 	});
 	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
 	var _Entity2 = __webpack_require__(10);
 	
 	var _Entity3 = _interopRequireDefault(_Entity2);
+	
+	var _resources = __webpack_require__(8);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -1958,6 +1971,15 @@
 	    _this.isFixed = true;
 	    return _this;
 	  }
+	
+	  _createClass(Ground, [{
+	    key: 'draw',
+	    value: function draw(ctx, frame) {
+	      ctx.save();
+	      ctx.drawImage(_resources.resources.image.ground.data, this.position.x, this.position.y, this.size.x, this.size.y);
+	      ctx.restore();
+	    }
+	  }]);
 	
 	  return Ground;
 	}(_Entity3.default);

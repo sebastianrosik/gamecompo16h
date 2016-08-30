@@ -19,4 +19,19 @@ export default class Bullet extends Entity {
   checkLifetime() {
     return Date.now() - this.lifetime > BULLET_LIFETIME;
   }
+
+  draw(ctx, frame) {
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.arc(
+      this.position.x + this.size.x / 2,
+      this.position.y + this.size.y / 2,
+      this.size.x / 2,
+      Math.PI * 2,
+      0,
+      false
+    );
+    ctx.fill();
+    ctx.restore();
+  }
 }

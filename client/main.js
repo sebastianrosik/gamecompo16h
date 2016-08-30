@@ -12,7 +12,7 @@ import Game from './game/JetPackGame';
 
 var canvas = document.createElement('canvas');
 var game, renderer, world, token, frame = 0;
-var debug = true;
+var debug = false;
 var offset = new Vector2();
 
 function renderSoldierInfo(soldier) {
