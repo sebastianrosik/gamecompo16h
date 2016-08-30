@@ -53,16 +53,19 @@ function init() {
   canvas.width = 680;
   canvas.height = 460;
   document.getElementById('canvas').appendChild(canvas);
+  window.game = game;
+}
+
+function startGame(nick) {
   renderer = new Renderer({canvas});
   world = new World();
-  game = new Game({world, renderer, keyboard, mouse, onPoints: function (soldier, points) {
+  game = new Game({world, renderer, keyboard, mouse, nick, onPoints: function (soldier, points) {
     onPoints(soldier, points, game)
   }});
   calcOffset();
   cancelAnimationFrame(token);
   loop();
   createInfo(game);
-  window.game = game;
 }
 
 function loop() {
@@ -85,16 +88,35 @@ function resize() {
   calcOffset();
 }
 
+function onNick(nick) {
+  showScreen('gameplay');
+  sendMsg({
+    type: "ready",
+    nick,
+    game: window.GAME_ID
+  });
+ startGame(nick);
+}
+
+function showScreen(screenName) {
+  document.querySelector('.screen').classList.add('hidden');
+  document.querySelector('#' + screenName).classList.remove('hidden');
+}
+
+function bindEvents() {
+  document.querySelector('#setup form').addEventListener('submit', e => {
+    e.preventDefault();
+    let nick = document.querySelector('#setup form [name=nick]');
+    onNick(nick.value)
+  });
+}
+
 window.addEventListener('load', () => {
- connect(() => {
+  bindEvents();
+  connect(() => {
     console.log('CONNECTED')
-    sendMsg({
-      type: "ready",
-      nick: window.PLAYER_NICK,
-      game: window.GAME_ID
-    });
     resources.load(init);
   });
-
 });
+
 window.addEventListener('resize', resize);

@@ -11,12 +11,13 @@ const SINGLE_HIT_POINTS = 1;
 
 
 export default class JetPackGame {
-  constructor({renderer, world, keyboard, mouse, onPoints}) {
+  constructor({renderer, world, keyboard, mouse, onPoints, nick}) {
     this.renderer = renderer;
     this.world = world;
     this.renderer.children = this.world.children;
     this.keyboard = keyboard;
     this.mouse = mouse;
+    this.nick = nick;
     this.createGround();
     this.createSoldiers();
     this.onPoints = onPoints;
@@ -68,6 +69,7 @@ export default class JetPackGame {
     }
     this.world.soldiers.forEach(soldier => this.add(soldier));
     this.myself = this.world.soldiers[0];
+    this.myself.name = this.nick;
   }
 
   createGround() {

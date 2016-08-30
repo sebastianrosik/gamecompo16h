@@ -118,16 +118,19 @@
 	  canvas.width = 680;
 	  canvas.height = 460;
 	  document.getElementById('canvas').appendChild(canvas);
+	  window.game = game;
+	}
+	
+	function startGame(nick) {
 	  renderer = new _Renderer2.default({ canvas: canvas });
 	  world = new _World2.default();
-	  game = new _JetPackGame2.default({ world: world, renderer: renderer, keyboard: _input.keyboard, mouse: _input.mouse, onPoints: function onPoints(soldier, points) {
+	  game = new _JetPackGame2.default({ world: world, renderer: renderer, keyboard: _input.keyboard, mouse: _input.mouse, nick: nick, onPoints: function onPoints(soldier, points) {
 	      _onPoints(soldier, points, game);
 	    } });
 	  calcOffset();
 	  cancelAnimationFrame(token);
 	  loop();
 	  createInfo(game);
-	  window.game = game;
 	}
 	
 	function loop() {
@@ -150,17 +153,37 @@
 	  calcOffset();
 	}
 	
+	function onNick(nick) {
+	  showScreen('gameplay');
+	  (0, _communication.sendMsg)({
+	    type: "ready",
+	    nick: nick,
+	    game: window.GAME_ID
+	  });
+	  startGame(nick);
+	}
+	
+	function showScreen(screenName) {
+	  document.querySelector('.screen').classList.add('hidden');
+	  document.querySelector('#' + screenName).classList.remove('hidden');
+	}
+	
+	function bindEvents() {
+	  document.querySelector('#setup form').addEventListener('submit', function (e) {
+	    e.preventDefault();
+	    var nick = document.querySelector('#setup form [name=nick]');
+	    onNick(nick.value);
+	  });
+	}
+	
 	window.addEventListener('load', function () {
+	  bindEvents();
 	  (0, _communication.connect)(function () {
 	    console.log('CONNECTED');
-	    (0, _communication.sendMsg)({
-	      type: "ready",
-	      nick: window.PLAYER_NICK,
-	      game: window.GAME_ID
-	    });
 	    _resources.resources.load(init);
 	  });
 	});
+	
 	window.addEventListener('resize', resize);
 
 /***/ },
@@ -929,6 +952,7 @@
 	    var keyboard = _ref.keyboard;
 	    var mouse = _ref.mouse;
 	    var onPoints = _ref.onPoints;
+	    var nick = _ref.nick;
 	
 	    _classCallCheck(this, JetPackGame);
 	
@@ -937,6 +961,7 @@
 	    this.renderer.children = this.world.children;
 	    this.keyboard = keyboard;
 	    this.mouse = mouse;
+	    this.nick = nick;
 	    this.createGround();
 	    this.createSoldiers();
 	    this.onPoints = onPoints;
@@ -1001,6 +1026,7 @@
 	        return _this3.add(soldier);
 	      });
 	      this.myself = this.world.soldiers[0];
+	      this.myself.name = this.nick;
 	    }
 	  }, {
 	    key: 'createGround',
