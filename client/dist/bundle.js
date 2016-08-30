@@ -70,6 +70,9 @@
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
+	window.PLAYER_NICK = "foobar";
+	window.GAME_ID = "gameid0123";
+	
 	var canvas = document.createElement('canvas');
 	var game,
 	    renderer,
@@ -124,7 +127,6 @@
 	  cancelAnimationFrame(token);
 	  loop();
 	  createInfo(game);
-	
 	  window.game = game;
 	}
 	
@@ -138,8 +140,10 @@
 	
 	function calcOffset() {
 	  var rect = canvas.getClientRects()[0];
-	  offset.x = rect.left;
-	  offset.y = rect.top;
+	  if (rect) {
+	    offset.x = rect.left;
+	    offset.y = rect.top;
+	  }
 	}
 	
 	function resize() {
@@ -147,7 +151,15 @@
 	}
 	
 	window.addEventListener('load', function () {
-	  _resources.resources.load(init);
+	  (0, _communication.connect)(function () {
+	    console.log('CONNECTED');
+	    (0, _communication.sendMsg)({
+	      type: "ready",
+	      nick: window.PLAYER_NICK,
+	      game: window.GAME_ID
+	    });
+	    _resources.resources.load(init);
+	  });
 	});
 	window.addEventListener('resize', resize);
 
@@ -775,9 +787,8 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	var msg = {
-	  type: 'hello'
-	};
+	exports.connect = connect;
+	exports.sendMsg = sendMsg;
 	
 	function readCookie(name) {
 	  var c = document.cookie.split(';');
@@ -793,15 +804,26 @@
 	}
 	var ws = readCookie('ws');
 	var jetpack = readCookie('jetpack');
-	var socket = exports.socket = new WebSocket('ws://' + (ws || 'localhost'), jetpack || 'abc');
 	
-	socket.onopen = function () {
+	var socket = void 0;
+	
+	function connect(cb) {
+	  var onMsg = arguments.length <= 1 || arguments[1] === undefined ? function () {} : arguments[1];
+	
+	  socket = new WebSocket('ws://' + (ws || 'localhost'), jetpack || 'abc');
+	
+	  socket.onopen = function () {
+	    cb();
+	  };
+	
+	  socket.onmessage = function (msgraw) {
+	    onMsg(JSON.parse(msgraw.data));
+	  };
+	}
+	
+	function sendMsg(msg) {
 	  socket.send(JSON.stringify(msg));
-	};
-	
-	socket.onmessage = function (msgraw) {
-	  console.log(JSON.parse(msgraw.data));
-	};
+	}
 
 /***/ },
 /* 8 */
@@ -890,6 +912,8 @@
 	
 	var _Ground2 = _interopRequireDefault(_Ground);
 	
+	var _communication = __webpack_require__(7);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -916,12 +940,45 @@
 	    this.createGround();
 	    this.createSoldiers();
 	    this.onPoints = onPoints;
+	    this.startSendingMessages();
 	  }
 	
 	  _createClass(JetPackGame, [{
+	    key: 'getPlayerState',
+	    value: function getPlayerState(soldier) {}
+	  }, {
+	    key: 'getBulletsState',
+	    value: function getBulletsState(soldier) {
+	      var _this = this;
+	
+	      return this.world.children.filter(function (child) {
+	        return child.ownerId == _this.myself.id;
+	      }).map(function (bullet) {
+	        return [bullet.x, bullet.y, bullet.lifetime];
+	      });
+	    }
+	  }, {
+	    key: 'getMessagePayload',
+	    value: function getMessagePayload() {
+	      return {
+	        type: "state",
+	        player: this.getPlayerState(),
+	        bullets: this.getBulletsState()
+	      };
+	    }
+	  }, {
+	    key: 'startSendingMessages',
+	    value: function startSendingMessages() {
+	      var _this2 = this;
+	
+	      setInterval(function () {
+	        (0, _communication.sendMsg)(_this2.getMessagePayload());
+	      }, 1000); //1000 / 16);
+	    }
+	  }, {
 	    key: 'createSoldiers',
 	    value: function createSoldiers() {
-	      var _this = this;
+	      var _this3 = this;
 	
 	      this.world.soldiers = [];
 	      var x = 20;
@@ -933,7 +990,7 @@
 	        this.world.soldiers.push(soldier);
 	      }
 	      this.world.soldiers.forEach(function (soldier) {
-	        return _this.add(soldier);
+	        return _this3.add(soldier);
 	      });
 	      this.myself = this.world.soldiers[0];
 	    }
@@ -1004,7 +1061,7 @@
 	  }, {
 	    key: 'handleBulltes',
 	    value: function handleBulltes(frame) {
-	      var _this2 = this;
+	      var _this4 = this;
 	
 	      var soldiers = this.world.soldiers.filter(function (s) {
 	        return !s.killed;
@@ -1012,15 +1069,15 @@
 	      this.world.children.forEach(function (child) {
 	        if (child instanceof _Bullet2.default) {
 	          if (child.checkLifetime(frame)) {
-	            _this2.world.remove(child);
+	            _this4.world.remove(child);
 	          }
 	          for (var n = 0; n < soldiers.length; ++n) {
 	            if (child.ownerId !== soldiers[n].id) {
-	              var collision = _this2.world.getCollision(child, soldiers[n]);
+	              var collision = _this4.world.getCollision(child, soldiers[n]);
 	              if (collision.x && collision.y) {
-	                _this2.addPoints(getSoldierById(_this2, child.ownerId), SINGLE_HIT_POINTS);
+	                _this4.addPoints(getSoldierById(_this4, child.ownerId), SINGLE_HIT_POINTS);
 	                soldiers[n].addDamage(child.damagePoints, child.ownerId);
-	                _this2.world.remove(child);
+	                _this4.world.remove(child);
 	              }
 	            }
 	          }

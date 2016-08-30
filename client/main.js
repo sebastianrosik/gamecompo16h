@@ -2,9 +2,11 @@ import Renderer from './lib/Renderer';
 import Vector2 from './lib/Vector2';
 import World from './lib/World';
 import {keyboard, mouse} from './lib/input';
-import {socket} from './communication';
+import {connect, sendMsg} from './communication';
 import {resources} from './resources'
 
+window.PLAYER_NICK = "foobar";
+window.GAME_ID = "gameid0123";
 
 import Game from './game/JetPackGame';
 
@@ -60,7 +62,6 @@ function init() {
   cancelAnimationFrame(token);
   loop();
   createInfo(game);
-
   window.game = game;
 }
 
@@ -74,9 +75,10 @@ function loop() {
 
 function calcOffset() {
   let rect = canvas.getClientRects()[0];
-  offset.x = rect.left;
-  offset.y = rect.top;
-  
+  if (rect) {
+    offset.x = rect.left;
+    offset.y = rect.top;
+  }
 }
 
 function resize() {
@@ -84,6 +86,15 @@ function resize() {
 }
 
 window.addEventListener('load', () => {
-  resources.load(init)
+ connect(() => {
+    console.log('CONNECTED')
+    sendMsg({
+      type: "ready",
+      nick: window.PLAYER_NICK,
+      game: window.GAME_ID
+    });
+    resources.load(init);
+  });
+
 });
 window.addEventListener('resize', resize);

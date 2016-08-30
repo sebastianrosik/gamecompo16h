@@ -3,9 +3,12 @@ import Soldier from './Soldier';
 import Bullet from './Bullet';
 import Ground from './Ground';
 
+import {sendMsg} from '../communication'
+
 const SOLDIERS = 4;
 const KILL_POINTS = 100;
 const SINGLE_HIT_POINTS = 1;
+
 
 export default class JetPackGame {
   constructor({renderer, world, keyboard, mouse, onPoints}) {
@@ -17,6 +20,32 @@ export default class JetPackGame {
     this.createGround();
     this.createSoldiers();
     this.onPoints = onPoints;
+    this.startSendingMessages();
+  }
+
+  getPlayerState(soldier) {
+  
+  }
+
+  getBulletsState(soldier) {
+    return this.world.children
+            .filter(child => child.ownerId == this.myself.id)
+            .map(bullet => [bullet.x, bullet.y, bullet.lifetime]);
+  }
+
+
+  getMessagePayload() {
+    return {
+      type: "state",
+      player: this.getPlayerState(),
+      bullets: this.getBulletsState()
+    };
+  }
+
+  startSendingMessages() {
+    setInterval(() => {      
+      sendMsg(this.getMessagePayload())
+    }, 1000);//1000 / 16);
   }
 
   createSoldiers() {
