@@ -8,7 +8,7 @@ function readCookie(name) {
     let item = c[i].trim();
     let cookie = item.split('=');
     cookie[0] = cookie[0].trim();
-    cookie[1] = cookie[1].trim();
+    cookie[1] = decodeURIComponent(cookie[1].trim());
     if (cookie[0] == name) {
       return cookie[1]
     }

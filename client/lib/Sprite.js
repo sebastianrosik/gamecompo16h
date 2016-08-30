@@ -1,12 +1,29 @@
 import Abstract from './Abstract';
 import Vector2 from './Vector2';
 
+function getFrameCount(frames) {
+  let c = 0;
+  for (var i in frames) {
+    c++;
+  }
+  return c;
+}
+
+
+
 export default class Sprite extends Abstract {
   constructor(x = 0, y = 0, width = 32, height = 32) {
     super();
     this.children = [];
     this.position = new Vector2(x, y);
     this.size = new Vector2(width, height);
+  }
+
+  getJSONFrame(resource, frameNumber, resourceName) {
+    let totalFrames = getFrameCount(resource.data.frames);
+    let relativeFrame = frameNumber % totalFrames;
+    let name = resourceName + ' ' + relativeFrame + '.ase';
+    return resource.data.frames[name].frame;
   }
 
   drawDebug(ctx, frame) {
