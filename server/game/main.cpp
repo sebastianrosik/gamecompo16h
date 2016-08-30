@@ -147,7 +147,7 @@ void WebsocketConnection::handle_recv() {
     if (data.size() < state_needs) {
       uint8_t buf[4096];
       int ret = s->Read(buf, sizeof(buf));
-      if (ret == 0) {
+      if (ret <= 0) {
         s->Disconnect();
         printf("%s:%u: disconnected\n",
              s->GetStrIP(), s->GetPort());
@@ -361,7 +361,7 @@ void handle_new_connection(NetSock *_s) {
   int idx = 0;
   for(;;) {
     int ret = s->Read(buf + idx, BUFSIZE - idx);
-    if (ret == 0) {
+    if (ret <= 0) {
       s->Disconnect();      
       printf("%s:%u: disconnected\n",
              s->GetStrIP(), s->GetPort());
