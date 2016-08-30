@@ -48,7 +48,19 @@ export default class Soldier extends Entity {
 
   drawFrame(ctx, frameNumber) {
     ctx.save();
-    ctx.drawImage(resources.image.soldier.data, this.position.x, this.position.y);
+    let d = 1;
+    let angle = this.targetAngle + Math.PI
+    if (angle >= 1.7 && angle < 4.5) {
+      d = -1;
+    }
+    ctx.scale(d, 1);
+    ctx.drawImage(
+      resources.image.soldier.data, 
+      this.position.x * d, 
+      this.position.y,
+      this.size.x * d,
+      this.size.y
+    );
     ctx.restore();
     this.drawFlameFrame(ctx,frameNumber)
   }

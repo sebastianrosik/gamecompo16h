@@ -6,12 +6,13 @@ function CCW(p1, p2, p3) {
 }
 
 export default class World extends Abstract {
-  constructor() {
+  constructor(width, height) {
     super();
     this.friction = 0.975;
     this.gravity = new Vector2(0, 0.2);
+    this.size = new Vector2(width, height);
+    this.position = new Vector2;
   }
-
   
   linesAreIntersecting(p1, p2, p3, p4) {
     return (CCW(p1, p3, p4) != CCW(p2, p3, p4)) && (CCW(p1, p2, p3) != CCW(p1, p2, p4));
@@ -105,6 +106,17 @@ export default class World extends Abstract {
       }
       entity.velocity.clamp(-entity.maxSpeed, entity.maxSpeed);
       entity.acceleration.multiplyScalar(0);
+
+      let insideWorld = this.getCollision(entity, this);
+
+      if (!insideWorld.x || !insideWorld.y) {
+        if (entity.type == 'soldier') {
+          entity.kill();
+        } else {
+          this.remove(entity);
+        }
+        return;
+      }
 
       if (!entity.isFixed) {
         var entities = entity.parent.children;

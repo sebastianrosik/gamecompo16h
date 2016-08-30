@@ -81,6 +81,9 @@ export default class JetPackGame {
   }
 
   mouseHandler(frame) {
+    if (this.myself.killed) {
+      return;
+    }
     if (this.mouse.button[0]) {
       this.world.soldiers[0].fire(frame);
     }
@@ -88,18 +91,22 @@ export default class JetPackGame {
   }
 
   keyboardHandler(frame) {
+    if (this.myself.killed) {
+      return;
+    }
+
     let v = 0.3;
     if (this.keyboard.up || this.keyboard.w) {
-      this.world.soldiers[0].acceleration.y -= v * 1.5;
+      this.myself.acceleration.y -= v * 1.5;
     }
     if (this.keyboard.down  || this.keyboard.s) {
-      this.world.soldiers[0].acceleration.y += v;
+      this.myself.acceleration.y += v;
     }
     if (this.keyboard.left || this.keyboard.a) {
-      this.world.soldiers[0].acceleration.x -= v;
+      this.myself.acceleration.x -= v;
     }
     if (this.keyboard.right || this.keyboard.d) {
-      this.world.soldiers[0].acceleration.x += v;
+      this.myself.acceleration.x += v;
     }
   }
 
@@ -124,8 +131,31 @@ export default class JetPackGame {
   }
 
   onKill(killerId) {
-    let soldier = getSoldierById(this, killerId);
-    this.addPoints(soldier, KILL_POINTS);
+    if (killerId) {
+      let soldier = getSoldierById(this, killerId);
+      this.addPoints(soldier, KILL_POINTS);
+    } else {
+      this.addPoints(this.myself, 0)
+    }
+    this.checkForGameOver();
+  }
+
+  checkForGameOver() {
+    let soldiersAlive = this.world.soldiers.filter(soldier => !soldier.killed);
+    if (!soldiersAlive.length) {
+      this.setGameOver();
+    }
+    if (soldiersAlive.length === 1) {
+      this.setGameWinner(soldiersAlive[0]);
+    }
+  }
+
+  setGameWinner(soldier) {
+    console.log('WINNER:', soldier.name);
+  }
+
+  setGameOver() {
+    console.log('GAME OVER');
   }
 
   handleBulltes(frame) {

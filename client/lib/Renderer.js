@@ -5,7 +5,7 @@ export default class Renderer extends Abstract {
     super();
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
-    this.resize();
+    // this.resize();
   }
 
   resize() {

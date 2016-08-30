@@ -49,22 +49,25 @@ function createInfo(game) {
   rows.forEach(row => info.appendChild(row));
 }
 
+const CWIDTH = 680;
+const CHEIGHT = 460;
+
 function init() {
-  canvas.width = 680;
-  canvas.height = 460;
+  canvas.width = CWIDTH;
+  canvas.height = CHEIGHT;
   document.getElementById('canvas').appendChild(canvas);
-  window.game = game;
 }
 
 function startGame(nick) {
   renderer = new Renderer({canvas});
-  world = new World();
+  world = new World(CWIDTH, CHEIGHT);
   game = new Game({world, renderer, keyboard, mouse, nick, onPoints: function (soldier, points) {
     onPoints(soldier, points, game)
   }});
   calcOffset();
   cancelAnimationFrame(token);
   loop();
+  window.game = game;
   createInfo(game);
 }
 

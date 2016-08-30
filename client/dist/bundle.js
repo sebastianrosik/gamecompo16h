@@ -114,22 +114,25 @@
 	  });
 	}
 	
+	var CWIDTH = 680;
+	var CHEIGHT = 460;
+	
 	function init() {
-	  canvas.width = 680;
-	  canvas.height = 460;
+	  canvas.width = CWIDTH;
+	  canvas.height = CHEIGHT;
 	  document.getElementById('canvas').appendChild(canvas);
-	  window.game = game;
 	}
 	
 	function startGame(nick) {
 	  renderer = new _Renderer2.default({ canvas: canvas });
-	  world = new _World2.default();
+	  world = new _World2.default(CWIDTH, CHEIGHT);
 	  game = new _JetPackGame2.default({ world: world, renderer: renderer, keyboard: _input.keyboard, mouse: _input.mouse, nick: nick, onPoints: function onPoints(soldier, points) {
 	      _onPoints(soldier, points, game);
 	    } });
 	  calcOffset();
 	  cancelAnimationFrame(token);
 	  loop();
+	  window.game = game;
 	  createInfo(game);
 	}
 	
@@ -222,7 +225,7 @@
 	
 	    _this.canvas = canvas;
 	    _this.ctx = canvas.getContext('2d');
-	    _this.resize();
+	    // this.resize();
 	    return _this;
 	  }
 	
@@ -593,13 +596,15 @@
 	var World = function (_Abstract) {
 	  _inherits(World, _Abstract);
 	
-	  function World() {
+	  function World(width, height) {
 	    _classCallCheck(this, World);
 	
 	    var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this));
 	
 	    _this.friction = 0.975;
 	    _this.gravity = new _Vector2.default(0, 0.2);
+	    _this.size = new _Vector2.default(width, height);
+	    _this.position = new _Vector2.default();
 	    return _this;
 	  }
 	
@@ -697,6 +702,17 @@
 	        }
 	        entity.velocity.clamp(-entity.maxSpeed, entity.maxSpeed);
 	        entity.acceleration.multiplyScalar(0);
+	
+	        var insideWorld = this.getCollision(entity, this);
+	
+	        if (!insideWorld.x || !insideWorld.y) {
+	          if (entity.type == 'soldier') {
+	            entity.kill();
+	          } else {
+	            this.remove(entity);
+	          }
+	          return;
+	        }
 	
 	        if (!entity.isFixed) {
 	          var entities = entity.parent.children;
@@ -1040,6 +1056,9 @@
 	  }, {
 	    key: 'mouseHandler',
 	    value: function mouseHandler(frame) {
+	      if (this.myself.killed) {
+	        return;
+	      }
 	      if (this.mouse.button[0]) {
 	        this.world.soldiers[0].fire(frame);
 	      }
@@ -1048,18 +1067,22 @@
 	  }, {
 	    key: 'keyboardHandler',
 	    value: function keyboardHandler(frame) {
+	      if (this.myself.killed) {
+	        return;
+	      }
+	
 	      var v = 0.3;
 	      if (this.keyboard.up || this.keyboard.w) {
-	        this.world.soldiers[0].acceleration.y -= v * 1.5;
+	        this.myself.acceleration.y -= v * 1.5;
 	      }
 	      if (this.keyboard.down || this.keyboard.s) {
-	        this.world.soldiers[0].acceleration.y += v;
+	        this.myself.acceleration.y += v;
 	      }
 	      if (this.keyboard.left || this.keyboard.a) {
-	        this.world.soldiers[0].acceleration.x -= v;
+	        this.myself.acceleration.x -= v;
 	      }
 	      if (this.keyboard.right || this.keyboard.d) {
-	        this.world.soldiers[0].acceleration.x += v;
+	        this.myself.acceleration.x += v;
 	      }
 	    }
 	  }, {
@@ -1089,8 +1112,36 @@
 	  }, {
 	    key: 'onKill',
 	    value: function onKill(killerId) {
-	      var soldier = getSoldierById(this, killerId);
-	      this.addPoints(soldier, KILL_POINTS);
+	      if (killerId) {
+	        var soldier = getSoldierById(this, killerId);
+	        this.addPoints(soldier, KILL_POINTS);
+	      } else {
+	        this.addPoints(this.myself, 0);
+	      }
+	      this.checkForGameOver();
+	    }
+	  }, {
+	    key: 'checkForGameOver',
+	    value: function checkForGameOver() {
+	      var soldiersAlive = this.world.soldiers.filter(function (soldier) {
+	        return !soldier.killed;
+	      });
+	      if (!soldiersAlive.length) {
+	        this.setGameOver();
+	      }
+	      if (soldiersAlive.length === 1) {
+	        this.setGameWinner(soldiersAlive[0]);
+	      }
+	    }
+	  }, {
+	    key: 'setGameWinner',
+	    value: function setGameWinner(soldier) {
+	      console.log('WINNER:', soldier.name);
+	    }
+	  }, {
+	    key: 'setGameOver',
+	    value: function setGameOver() {
+	      console.log('GAME OVER');
 	    }
 	  }, {
 	    key: 'handleBulltes',
@@ -1476,7 +1527,13 @@
 	    key: 'drawFrame',
 	    value: function drawFrame(ctx, frameNumber) {
 	      ctx.save();
-	      ctx.drawImage(_resources.resources.image.soldier.data, this.position.x, this.position.y);
+	      var d = 1;
+	      var angle = this.targetAngle + Math.PI;
+	      if (angle >= 1.7 && angle < 4.5) {
+	        d = -1;
+	      }
+	      ctx.scale(d, 1);
+	      ctx.drawImage(_resources.resources.image.soldier.data, this.position.x * d, this.position.y, this.size.x * d, this.size.y);
 	      ctx.restore();
 	      this.drawFlameFrame(ctx, frameNumber);
 	    }
