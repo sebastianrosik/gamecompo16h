@@ -1,4 +1,5 @@
 import Entity from '../lib/Entity';
+import {getStringId} from '../lib/generators';
 
 const BULLET_LIFETIME = 3000;
 
@@ -12,6 +13,7 @@ export default class Bullet extends Entity {
     this.type = 'bullet';
     this.damagePoints = 0.1;
     this.dontCollideWith = [this.type, 'soldier'];
+    this.id = this.ownerId.toString() + this.lifetime.toString() + getStringId()
   }
 
   checkLifetime() {

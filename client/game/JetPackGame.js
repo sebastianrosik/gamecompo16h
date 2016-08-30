@@ -29,6 +29,18 @@ export default class JetPackGame {
   message(msg) {
     switch(msg.type) {
       case 'state':
+        let bulletsByOwner = {};
+        msg.state.bullets.forEach(bullet => {
+          let x = bullet[0];
+          let y = bullet[1];
+          let time = bullet[2];
+          let ownerId = bullet[3];
+          // this.updateBullet(x, y, time, ownerId);
+          // if (!bulletsByOwner[ownerId]) {
+          //   bulletsByOwner[ownerId] = [];
+          // }
+          // bulletsByOwner[ownerId].push(bullet);
+        });
         msg.state.players.forEach(player => {
           let id = player[0];
           let data = player[1];
@@ -40,6 +52,25 @@ export default class JetPackGame {
           }
         })
     }
+  }
+
+  updateBullet(x, y, time, ownerId) {
+    this.eachBullet(bullet => {
+      if (bullet.ownerId === ownerId && bullet.lifetime == time) {
+        // update
+        bullet.position.x = x;
+        bullet.position.y = y;
+      } else {
+        this.addBullet(x, y, time, ownerId)
+        // add bullet
+      }
+    })
+  }
+
+  addBullet(x, y, time, ownerId) {
+    let bullet = new Bullet(x, y, ownerId);
+    bullet.lifetime = time;
+    this.add(bullet);
   }
 
   getPlayerState() {
@@ -57,7 +88,7 @@ export default class JetPackGame {
             .filter(child => {
                 return child.ownerId == this.myself.id
             })
-            .map(bullet => [bullet.position.x, bullet.position.y, bullet.lifetime]);
+            .map(bullet => [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id]);
   }
 
 
@@ -243,7 +274,7 @@ export default class JetPackGame {
             }
           }
         }
-    })
+    });
   }
 }
 

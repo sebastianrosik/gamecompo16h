@@ -345,6 +345,7 @@
 	});
 	exports.getNextId = getNextId;
 	exports.getRandomName = getRandomName;
+	exports.getStringId = getStringId;
 	var ids = 0;
 	
 	function getNextId() {
@@ -357,6 +358,10 @@
 	
 	function getRandomName() {
 	  return firstNames[Math.round(Math.random() * (firstNames.length - 1))] + ' ' + lastNames[Math.round(Math.random() * (lastNames.length - 1))];
+	}
+	
+	function getStringId() {
+	  return Math.random().toString(36).substring(7);
 	}
 
 /***/ },
@@ -1058,6 +1063,18 @@
 	
 	      switch (msg.type) {
 	        case 'state':
+	          var bulletsByOwner = {};
+	          msg.state.bullets.forEach(function (bullet) {
+	            var x = bullet[0];
+	            var y = bullet[1];
+	            var time = bullet[2];
+	            var ownerId = bullet[3];
+	            // this.updateBullet(x, y, time, ownerId);
+	            // if (!bulletsByOwner[ownerId]) {
+	            //   bulletsByOwner[ownerId] = [];
+	            // }
+	            // bulletsByOwner[ownerId].push(bullet);
+	          });
 	          msg.state.players.forEach(function (player) {
 	            var id = player[0];
 	            var data = player[1];
@@ -1069,6 +1086,29 @@
 	            }
 	          });
 	      }
+	    }
+	  }, {
+	    key: 'updateBullet',
+	    value: function updateBullet(x, y, time, ownerId) {
+	      var _this2 = this;
+	
+	      this.eachBullet(function (bullet) {
+	        if (bullet.ownerId === ownerId && bullet.lifetime == time) {
+	          // update
+	          bullet.position.x = x;
+	          bullet.position.y = y;
+	        } else {
+	          _this2.addBullet(x, y, time, ownerId);
+	          // add bullet
+	        }
+	      });
+	    }
+	  }, {
+	    key: 'addBullet',
+	    value: function addBullet(x, y, time, ownerId) {
+	      var bullet = new _Bullet2.default(x, y, ownerId);
+	      bullet.lifetime = time;
+	      this.add(bullet);
 	    }
 	  }, {
 	    key: 'getPlayerState',
@@ -1084,12 +1124,12 @@
 	  }, {
 	    key: 'getBulletsState',
 	    value: function getBulletsState() {
-	      var _this2 = this;
+	      var _this3 = this;
 	
 	      return this.world.children.filter(function (child) {
-	        return child.ownerId == _this2.myself.id;
+	        return child.ownerId == _this3.myself.id;
 	      }).map(function (bullet) {
-	        return [bullet.position.x, bullet.position.y, bullet.lifetime];
+	        return [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id];
 	      });
 	    }
 	  }, {
@@ -1104,10 +1144,10 @@
 	  }, {
 	    key: 'startSendingMessages',
 	    value: function startSendingMessages() {
-	      var _this3 = this;
+	      var _this4 = this;
 	
 	      setInterval(function () {
-	        (0, _communication.sendMsg)(_this3.getMessagePayload());
+	        (0, _communication.sendMsg)(_this4.getMessagePayload());
 	      }, 1000 / 16);
 	    }
 	  }, {
@@ -1288,22 +1328,22 @@
 	  }, {
 	    key: 'handleBulltes',
 	    value: function handleBulltes(frame) {
-	      var _this4 = this;
+	      var _this5 = this;
 	
 	      var soldiers = this.world.soldiers.filter(function (s) {
 	        return !s.killed;
 	      });
 	      this.eachBullet(function (child) {
 	        if (child.checkLifetime(frame)) {
-	          _this4.world.remove(child);
+	          _this5.world.remove(child);
 	        }
 	        for (var n = 0; n < soldiers.length; ++n) {
 	          if (child.ownerId !== soldiers[n].id) {
-	            var collision = _this4.world.getCollision(child, soldiers[n]);
+	            var collision = _this5.world.getCollision(child, soldiers[n]);
 	            if (collision.x && collision.y) {
-	              _this4.addPoints(getSoldierById(_this4, child.ownerId), SINGLE_HIT_POINTS);
+	              _this5.addPoints(getSoldierById(_this5, child.ownerId), SINGLE_HIT_POINTS);
 	              soldiers[n].addDamage(child.damagePoints, child.ownerId);
-	              _this4.world.remove(child);
+	              _this5.world.remove(child);
 	            }
 	          }
 	        }
@@ -1783,6 +1823,8 @@
 	
 	var _Entity3 = _interopRequireDefault(_Entity2);
 	
+	var _generators = __webpack_require__(3);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -1808,6 +1850,7 @@
 	    _this.type = 'bullet';
 	    _this.damagePoints = 0.1;
 	    _this.dontCollideWith = [_this.type, 'soldier'];
+	    _this.id = _this.ownerId.toString() + _this.lifetime.toString() + (0, _generators.getStringId)();
 	    return _this;
 	  }
 	

@@ -29,3 +29,7 @@ export function getRandomName() {
   return firstNames[Math.round(Math.random() * (firstNames.length -1))] + ' ' +
           lastNames[Math.round(Math.random() * (lastNames.length -1))]
 }
+
+export function getStringId() {
+  return Math.random().toString(36).substring(7);
+}
