@@ -785,7 +785,7 @@
 	    var item = c[i].trim();
 	    var cookie = item.split('=');
 	    cookie[0] = cookie[0].trim();
-	    cookie[1] = cookie[1].trim();
+	    cookie[1] = decodeURIComponent(cookie[1].trim());
 	    if (cookie[0] == name) {
 	      return cookie[1];
 	    }
@@ -1191,6 +1191,14 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
+	function getFrameCount(frames) {
+	  var c = 0;
+	  for (var i in frames) {
+	    c++;
+	  }
+	  return c;
+	}
+	
 	var Sprite = function (_Abstract) {
 	  _inherits(Sprite, _Abstract);
 	
@@ -1211,6 +1219,14 @@
 	  }
 	
 	  _createClass(Sprite, [{
+	    key: 'getJSONFrame',
+	    value: function getJSONFrame(resource, frameNumber, resourceName) {
+	      var totalFrames = getFrameCount(resource.data.frames);
+	      var relativeFrame = frameNumber % totalFrames;
+	      var name = resourceName + ' ' + relativeFrame + '.ase';
+	      return resource.data.frames[name].frame;
+	    }
+	  }, {
 	    key: 'drawDebug',
 	    value: function drawDebug(ctx, frame) {
 	      ctx.save();
@@ -1309,21 +1325,6 @@
 	var SOLDIER_WIDTH = 32;
 	var SOLDIER_HEIGHT = 32;
 	
-	function getFrameCount(frames) {
-	  var c = 0;
-	  for (var i in frames) {
-	    c++;
-	  }
-	  return c;
-	}
-	
-	function getJSONFrame(resource, frameNumber, resourceName) {
-	  var totalFrames = getFrameCount(resource.frames);
-	  var relativeFrame = frameNumber % totalFrames;
-	  var name = resourceName + ' ' + relativeFrame + '.ase';
-	  return resource[name];
-	}
-	
 	var Soldier = function (_Entity) {
 	  _inherits(Soldier, _Entity);
 	
@@ -1386,10 +1387,18 @@
 	      ctx.save();
 	      ctx.drawImage(_resources.resources.image.soldier.data, this.position.x, this.position.y);
 	      ctx.restore();
-	
+	      this.drawFlameFrame(ctx, frameNumber);
+	    }
+	  }, {
+	    key: 'drawFlameFrame',
+	    value: function drawFlameFrame(ctx, frameNumber) {
 	      var flame = _resources.resources.json.flame;
 	
-	      var flameFrame = getJSONFrame(flame, frameNumber, 'flame');
+	      var flameX = 18;
+	      var flameY = 21;
+	      var flameFrame = this.getJSONFrame(flame, frameNumber, 'flame');
+	
+	      ctx.drawImage(_resources.resources.image.flame.data, flameFrame.x, flameFrame.y, flameFrame.w, flameFrame.h, this.position.x + flameX, this.position.y + flameY, flameFrame.w, flameFrame.h);
 	    }
 	  }, {
 	    key: 'draw',
