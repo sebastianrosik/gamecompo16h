@@ -11,7 +11,7 @@ const SINGLE_HIT_POINTS = 1;
 
 
 export default class JetPackGame {
-  constructor({renderer, world, keyboard, mouse, onPoints, nick}) {
+  constructor({renderer, world, keyboard, mouse, onPoints, onState, nick}) {
     this.renderer = renderer;
     this.world = world;
     this.renderer.children = this.world.children;
@@ -21,7 +21,9 @@ export default class JetPackGame {
     this.createGround();
     this.createSoldiers();
     this.onPoints = onPoints;
+    this.onState = onState;
     this.startSendingMessages();
+    this.state = JetPackGame.STATE_GAMEPLAY;
   }
 
   getPlayerState() {
@@ -72,16 +74,20 @@ export default class JetPackGame {
     this.myself.name = this.nick;
   }
 
+  createPlatform() {
+    
+  }
+
   createGround() {
-    var c = 10;
-    var w = 64;
+    var c = 20;
+    var w = 32;
     while(c--) {
-      this.add(new Ground(w * c, 300, w, w));
+      this.add(new Ground(w * c, 400, w, w));
     }
   }
 
   mouseHandler(frame) {
-    if (this.myself.killed) {
+    if (this.myself.killed && this.state !== JetPackGame.STATE_GAMEPLAY) {
       return;
     }
     if (this.mouse.button[0]) {
@@ -91,7 +97,7 @@ export default class JetPackGame {
   }
 
   keyboardHandler(frame) {
-    if (this.myself.killed) {
+    if (this.myself.killed && this.state !== JetPackGame.STATE_GAMEPLAY) {
       return;
     }
 
@@ -152,10 +158,17 @@ export default class JetPackGame {
 
   setGameWinner(soldier) {
     console.log('WINNER:', soldier.name);
+    this.setState(JetPackGame.STATE_GAMEWIN)
   }
 
   setGameOver() {
     console.log('GAME OVER');
+    this.setState(JetPackGame.STATE_GAMEOVER)
+  }
+
+  setState(state) {
+    this.state = state;
+    this.onState && this.onState(state);
   }
 
   handleBulltes(frame) {
@@ -180,6 +193,10 @@ export default class JetPackGame {
   }
 }
 
+
+JetPackGame.STATE_GAMEPLAY = 0x0;
+JetPackGame.STATE_GAMEOVER = 0x1;
+JetPackGame.STATE_GAMEWIN = 0x2;
 
 function getSoldierById(game, id) {
   return game.world.soldiers.filter(s => s.id === id)[0];

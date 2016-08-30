@@ -4,30 +4,57 @@ function readCookie(name) {
   for (let i = 0; i < c.length; ++i) {
     let item = c[i].trim();
     let cookie = item.split('=');
-    cookie[0] = cookie[0].trim();
-    cookie[1] = decodeURIComponent(cookie[1].trim());
-    if (cookie[0] == name) {
-      return cookie[1]
+    let cname = cookie[0];
+    let cvalue = cookie[1];
+    if (cname && cvalue) {
+      cname = decodeURIComponent(cname).trim();
+      cvalue = decodeURIComponent(cvalue).trim();
+      if (name == cname) {
+        return cvalue;
+      }
     }
   }  
 }
+
+window.readCookie = readCookie
 let ws = readCookie('ws');
 let jetpack = readCookie('jetpack');
 
 let socket;
+let reconnecting = false;
 
-export function connect(cb, onMsg = () => {}) {
+
+function reconnect(cb, onMsg, onDsc) {
+  reconnecting = true;
+  setTimeout(() => {
+    if (reconnecting) {      
+      connect(cb, onMsg, onDsc)
+    }
+  }, 5000);
+}
+
+export function connect(cb, onMsg = () => {}, onDsc = () => {}) {
+  console.log('connecting....')
   socket = new WebSocket('ws://' + (ws || 'localhost') , jetpack || 'abc');
 
   socket.onopen = function () {
     cb();
+    reconnecting = false;
   }
 
+  socket.onclose = function () {
+    console.log('CLOSE');
+    socket.close()
+    reconnect(cb, onMsg, onDsc);
+  }
   socket.onmessage = function (msgraw) {
     onMsg(JSON.parse(msgraw.data));
   }
 }
 
+export function isConnected() {
+  return socket && socket.readyState === 1;
+}
 export function sendMsg(msg) {
-  socket.send(JSON.stringify(msg));
+  socket && socket.send(JSON.stringify(msg));
 }

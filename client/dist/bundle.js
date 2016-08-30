@@ -123,10 +123,19 @@
 	  document.getElementById('canvas').appendChild(canvas);
 	}
 	
+	function onState(state) {
+	  if (state === _JetPackGame2.default.STATE_GAMEOVER) {
+	    showScreen('gameOver');
+	  }
+	  if (state === _JetPackGame2.default.STATE_GAMEWIN) {
+	    showScreen('gameWinner');
+	  }
+	}
+	
 	function startGame(nick) {
 	  renderer = new _Renderer2.default({ canvas: canvas });
 	  world = new _World2.default(CWIDTH, CHEIGHT);
-	  game = new _JetPackGame2.default({ world: world, renderer: renderer, keyboard: _input.keyboard, mouse: _input.mouse, nick: nick, onPoints: function onPoints(soldier, points) {
+	  game = new _JetPackGame2.default({ world: world, renderer: renderer, keyboard: _input.keyboard, mouse: _input.mouse, nick: nick, onState: onState, onPoints: function onPoints(soldier, points) {
 	      _onPoints(soldier, points, game);
 	    } });
 	  calcOffset();
@@ -167,22 +176,38 @@
 	}
 	
 	function showScreen(screenName) {
-	  document.querySelector('.screen').classList.add('hidden');
+	  var screens = document.querySelectorAll('.screen');
+	  for (var i = 0; i < screens.length; ++i) {
+	    screens[i].classList.add('hidden');
+	  }
 	  document.querySelector('#' + screenName).classList.remove('hidden');
 	}
 	
 	function bindEvents() {
 	  document.querySelector('#setup form').addEventListener('submit', function (e) {
 	    e.preventDefault();
+	    if (!(0, _communication.isConnected)()) {
+	      showConnErr();
+	      return false;
+	    }
 	    var nick = document.querySelector('#setup form [name=nick]');
 	    onNick(nick.value);
+	    return false;
 	  });
+	}
+	
+	function hideConnErr() {
+	  document.querySelector('#connerr').classList.add('hidden');
+	}
+	
+	function showConnErr() {
+	  document.querySelector('#connerr').classList.remove('hidden');
 	}
 	
 	window.addEventListener('load', function () {
 	  bindEvents();
 	  (0, _communication.connect)(function () {
-	    console.log('CONNECTED');
+	    hideConnErr();
 	    _resources.resources.load(init);
 	  });
 	});
@@ -827,6 +852,7 @@
 	  value: true
 	});
 	exports.connect = connect;
+	exports.isConnected = isConnected;
 	exports.sendMsg = sendMsg;
 	
 	function readCookie(name) {
@@ -834,34 +860,61 @@
 	  for (var i = 0; i < c.length; ++i) {
 	    var item = c[i].trim();
 	    var cookie = item.split('=');
-	    cookie[0] = cookie[0].trim();
-	    cookie[1] = decodeURIComponent(cookie[1].trim());
-	    if (cookie[0] == name) {
-	      return cookie[1];
+	    var cname = cookie[0];
+	    var cvalue = cookie[1];
+	    if (cname && cvalue) {
+	      cname = decodeURIComponent(cname).trim();
+	      cvalue = decodeURIComponent(cvalue).trim();
+	      if (name == cname) {
+	        return cvalue;
+	      }
 	    }
 	  }
 	}
+	
+	window.readCookie = readCookie;
 	var ws = readCookie('ws');
 	var jetpack = readCookie('jetpack');
 	
 	var socket = void 0;
+	var reconnecting = false;
+	
+	function reconnect(cb, onMsg, onDsc) {
+	  reconnecting = true;
+	  setTimeout(function () {
+	    if (reconnecting) {
+	      connect(cb, onMsg, onDsc);
+	    }
+	  }, 5000);
+	}
 	
 	function connect(cb) {
 	  var onMsg = arguments.length <= 1 || arguments[1] === undefined ? function () {} : arguments[1];
+	  var onDsc = arguments.length <= 2 || arguments[2] === undefined ? function () {} : arguments[2];
 	
+	  console.log('connecting....');
 	  socket = new WebSocket('ws://' + (ws || 'localhost'), jetpack || 'abc');
 	
 	  socket.onopen = function () {
 	    cb();
+	    reconnecting = false;
 	  };
 	
+	  socket.onclose = function () {
+	    console.log('CLOSE');
+	    socket.close();
+	    reconnect(cb, onMsg, onDsc);
+	  };
 	  socket.onmessage = function (msgraw) {
 	    onMsg(JSON.parse(msgraw.data));
 	  };
 	}
 	
+	function isConnected() {
+	  return socket && socket.readyState === 1;
+	}
 	function sendMsg(msg) {
-	  socket.send(JSON.stringify(msg));
+	  socket && socket.send(JSON.stringify(msg));
 	}
 
 /***/ },
@@ -968,6 +1021,7 @@
 	    var keyboard = _ref.keyboard;
 	    var mouse = _ref.mouse;
 	    var onPoints = _ref.onPoints;
+	    var onState = _ref.onState;
 	    var nick = _ref.nick;
 	
 	    _classCallCheck(this, JetPackGame);
@@ -981,7 +1035,9 @@
 	    this.createGround();
 	    this.createSoldiers();
 	    this.onPoints = onPoints;
+	    this.onState = onState;
 	    this.startSendingMessages();
+	    this.state = JetPackGame.STATE_GAMEPLAY;
 	  }
 	
 	  _createClass(JetPackGame, [{
@@ -1045,18 +1101,21 @@
 	      this.myself.name = this.nick;
 	    }
 	  }, {
+	    key: 'createPlatform',
+	    value: function createPlatform() {}
+	  }, {
 	    key: 'createGround',
 	    value: function createGround() {
-	      var c = 10;
-	      var w = 64;
+	      var c = 20;
+	      var w = 32;
 	      while (c--) {
-	        this.add(new _Ground2.default(w * c, 300, w, w));
+	        this.add(new _Ground2.default(w * c, 400, w, w));
 	      }
 	    }
 	  }, {
 	    key: 'mouseHandler',
 	    value: function mouseHandler(frame) {
-	      if (this.myself.killed) {
+	      if (this.myself.killed && this.state !== JetPackGame.STATE_GAMEPLAY) {
 	        return;
 	      }
 	      if (this.mouse.button[0]) {
@@ -1067,7 +1126,7 @@
 	  }, {
 	    key: 'keyboardHandler',
 	    value: function keyboardHandler(frame) {
-	      if (this.myself.killed) {
+	      if (this.myself.killed && this.state !== JetPackGame.STATE_GAMEPLAY) {
 	        return;
 	      }
 	
@@ -1137,11 +1196,19 @@
 	    key: 'setGameWinner',
 	    value: function setGameWinner(soldier) {
 	      console.log('WINNER:', soldier.name);
+	      this.setState(JetPackGame.STATE_GAMEWIN);
 	    }
 	  }, {
 	    key: 'setGameOver',
 	    value: function setGameOver() {
 	      console.log('GAME OVER');
+	      this.setState(JetPackGame.STATE_GAMEOVER);
+	    }
+	  }, {
+	    key: 'setState',
+	    value: function setState(state) {
+	      this.state = state;
+	      this.onState && this.onState(state);
 	    }
 	  }, {
 	    key: 'handleBulltes',
@@ -1176,6 +1243,10 @@
 	
 	exports.default = JetPackGame;
 	
+	
+	JetPackGame.STATE_GAMEPLAY = 0x0;
+	JetPackGame.STATE_GAMEOVER = 0x1;
+	JetPackGame.STATE_GAMEWIN = 0x2;
 	
 	function getSoldierById(game, id) {
 	  return game.world.soldiers.filter(function (s) {

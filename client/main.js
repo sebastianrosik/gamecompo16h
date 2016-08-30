@@ -2,7 +2,7 @@ import Renderer from './lib/Renderer';
 import Vector2 from './lib/Vector2';
 import World from './lib/World';
 import {keyboard, mouse} from './lib/input';
-import {connect, sendMsg} from './communication';
+import {connect, sendMsg, isConnected} from './communication';
 import {resources} from './resources'
 
 window.PLAYER_NICK = "foobar";
@@ -58,10 +58,19 @@ function init() {
   document.getElementById('canvas').appendChild(canvas);
 }
 
+function onState(state) {
+  if (state === Game.STATE_GAMEOVER) {
+    showScreen('gameOver');
+  }
+  if (state === Game.STATE_GAMEWIN) {
+    showScreen('gameWinner');
+  }
+}
+
 function startGame(nick) {
   renderer = new Renderer({canvas});
   world = new World(CWIDTH, CHEIGHT);
-  game = new Game({world, renderer, keyboard, mouse, nick, onPoints: function (soldier, points) {
+  game = new Game({world, renderer, keyboard, mouse, nick, onState, onPoints: function (soldier, points) {
     onPoints(soldier, points, game)
   }});
   calcOffset();
@@ -102,22 +111,38 @@ function onNick(nick) {
 }
 
 function showScreen(screenName) {
-  document.querySelector('.screen').classList.add('hidden');
+  let screens = document.querySelectorAll('.screen');
+  for (let i = 0; i < screens.length; ++i) {
+    screens[i].classList.add('hidden');
+  }
   document.querySelector('#' + screenName).classList.remove('hidden');
 }
 
 function bindEvents() {
   document.querySelector('#setup form').addEventListener('submit', e => {
     e.preventDefault();
+    if (!isConnected()) {
+      showConnErr();
+      return false;
+    }
     let nick = document.querySelector('#setup form [name=nick]');
-    onNick(nick.value)
+    onNick(nick.value);
+    return false;
   });
+}
+
+function hideConnErr() {
+  document.querySelector('#connerr').classList.add('hidden');
+}
+
+function showConnErr() {
+  document.querySelector('#connerr').classList.remove('hidden');
 }
 
 window.addEventListener('load', () => {
   bindEvents();
   connect(() => {
-    console.log('CONNECTED')
+    hideConnErr();
     resources.load(init);
   });
 });
