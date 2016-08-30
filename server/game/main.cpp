@@ -418,6 +418,10 @@ void handle_new_connection(NetSock *_s) {
   tmp = proto_;
   while(*tmp != '\n' && *tmp != '\r') tmp++;
 
+  if (tmp - proto_ > 50) {
+    return;
+  }
+
   std::string proto(proto_, tmp - proto_);
 
   // Calc reply.
