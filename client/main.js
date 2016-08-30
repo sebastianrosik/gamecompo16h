@@ -2,6 +2,7 @@ import Renderer from './lib/Renderer';
 import Vector2 from './lib/Vector2';
 import World from './lib/World';
 import {keyboard, mouse} from './lib/input';
+import {socket} from './communication';
 
 import Game from './game/JetPackGame';
 
