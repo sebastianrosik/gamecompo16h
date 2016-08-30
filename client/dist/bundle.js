@@ -1922,8 +1922,17 @@
 	    key: 'draw',
 	    value: function draw(ctx, frame) {
 	      ctx.save();
+	      ctx.beginPath();
 	      ctx.fillStyle = '#fff';
 	      ctx.arc(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.size.x / 2, Math.PI * 2, 0, false);
+	      ctx.fill();
+	      ctx.closePath();
+	
+	      ctx.globalAlpha = 0.5;
+	      ctx.beginPath();
+	
+	      ctx.arc(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.size.x / 2 + 5 * Math.random(), Math.PI * 2, 0, false);
+	      ctx.closePath();
 	      ctx.fill();
 	      ctx.restore();
 	    }
