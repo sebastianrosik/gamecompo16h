@@ -1113,9 +1113,14 @@
 	  }, {
 	    key: 'updateBullet',
 	    value: function updateBullet(x, y, time, ownerId, bulletId) {
+	      var ax = arguments.length <= 5 || arguments[5] === undefined ? 0 : arguments[5];
+	      var ay = arguments.length <= 6 || arguments[6] === undefined ? 0 : arguments[6];
+	      var vx = arguments.length <= 7 || arguments[7] === undefined ? 0 : arguments[7];
+	      var vy = arguments.length <= 8 || arguments[8] === undefined ? 0 : arguments[8];
+	
 	      var bullet = this.world.bullets[bulletId];
 	      if (!bullet) {
-	        this.addBullet(x, y, time, ownerId, bulletId);
+	        this.addBullet(x, y, time, ownerId, bulletId, ax, ay, vx, vy);
 	        return;
 	      }
 	
@@ -1126,10 +1131,14 @@
 	    }
 	  }, {
 	    key: 'addBullet',
-	    value: function addBullet(x, y, time, ownerId, bulletId) {
+	    value: function addBullet(x, y, time, ownerId, bulletId, ax, ay, vx, vy) {
 	      var bullet = new _Bullet2.default(x, y, ownerId);
 	      bullet.id = bulletId;
 	      bullet.lifetime = time;
+	      bullet.velocity.x = vx;
+	      bullet.velocity.y = vy;
+	      bullet.acceleration.x = ax;
+	      bullet.acceleration.y = ay;
 	      this.world.bullets[bullet.id] = bullet;
 	      this.add(bullet);
 	    }
@@ -1156,7 +1165,7 @@
 	      return this.world.children.filter(function (child) {
 	        return child.ownerId == _this2.myself.id;
 	      }).map(function (bullet) {
-	        return [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id];
+	        return [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id, bullet.acceleration.x, bullet.acceleration.y, bullet.velocity.x, bullet.velocity.y];
 	      });
 	    }
 	  }, {
@@ -1759,11 +1768,12 @@
 	  }, {
 	    key: 'drawGun',
 	    value: function drawGun(ctx, frameNumber) {
+	      var s = 64;
 	      ctx.save();
-	      ctx.translate(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2);
+	      ctx.translate(this.position.x + s / 2, this.position.y + s / 2);
 	      ctx.rotate(this.targetAngle + Math.PI);
-	      ctx.translate(-this.position.x - this.size.x / 2, -this.position.y - this.size.y / 2);
-	      ctx.drawImage(_resources.resources.image.gun.data, this.position.x, this.position.y, this.size.x, this.size.y);
+	      ctx.translate(-this.position.x - s / 2, -this.position.y - s / 2);
+	      ctx.drawImage(_resources.resources.image.gun.data, this.position.x, this.position.y, s, s);
 	      ctx.restore();
 	    }
 	  }, {

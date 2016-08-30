@@ -78,10 +78,10 @@ export default class JetPackGame {
     }
   }
 
-  updateBullet(x, y, time, ownerId, bulletId) {
+  updateBullet(x, y, time, ownerId, bulletId, ax = 0, ay = 0, vx = 0, vy = 0) {
    let bullet = this.world.bullets[bulletId];
    if (!bullet) {
-      this.addBullet(x, y, time, ownerId, bulletId)
+      this.addBullet(x, y, time, ownerId, bulletId, ax, ay, vx, vy)
     return;
    }
 
@@ -91,10 +91,14 @@ export default class JetPackGame {
     }
   }
 
-  addBullet(x, y, time, ownerId, bulletId) {
+  addBullet(x, y, time, ownerId, bulletId, ax, ay, vx, vy) {
     let bullet = new Bullet(x, y, ownerId);
     bullet.id = bulletId;
     bullet.lifetime = time;
+    bullet.velocity.x = vx;
+    bullet.velocity.y = vy;
+    bullet.acceleration.x = ax;
+    bullet.acceleration.y = ay;
     this.world.bullets[bullet.id] = bullet;
     this.add(bullet);
   }
@@ -118,7 +122,7 @@ export default class JetPackGame {
             .filter(child => {
                 return child.ownerId == this.myself.id
             })
-            .map(bullet => [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id]);
+            .map(bullet => [bullet.position.x, bullet.position.y, bullet.lifetime, bullet.id, bullet.acceleration.x, bullet.acceleration.y, bullet.velocity.x, bullet.velocity.y]);
   }
 
 

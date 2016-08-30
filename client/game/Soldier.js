@@ -66,22 +66,23 @@ export default class Soldier extends Entity {
   }
 
   drawGun(ctx,frameNumber) {
+    let s = 64;
     ctx.save();
     ctx.translate(
-      this.position.x + this.size.x / 2, 
-      this.position.y + this.size.y / 2
+      this.position.x + s / 2, 
+      this.position.y + s / 2
     );
     ctx.rotate(this.targetAngle + Math.PI);
     ctx.translate(
-      -this.position.x - this.size.x / 2, 
-      -this.position.y - this.size.y / 2
+      -this.position.x - s / 2, 
+      -this.position.y - s / 2
     );
     ctx.drawImage(
       resources.image.gun.data,
       this.position.x, 
       this.position.y,
-      this.size.x,
-      this.size.y
+      s,
+      s
     );
     ctx.restore();
   }
