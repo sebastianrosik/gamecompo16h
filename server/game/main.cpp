@@ -11,6 +11,7 @@
 #include <vector>
 #include <stdint.h>
 #include <thread>
+#include <signal.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
@@ -472,6 +473,8 @@ void handle_new_connection(NetSock *_s) {
 }
 
 int main(void) {
+  signal(SIGPIPE, SIG_IGN);
+
   std::thread gm(GameMaster);
 
   NetSock server;
