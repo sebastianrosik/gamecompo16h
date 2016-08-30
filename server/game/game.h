@@ -7,6 +7,7 @@ class Bullet {
  public:
   std::string id;   
   double x, y, lifetime;
+  double ax, ay, vx, vy;
 };
 
 class Game;
@@ -23,6 +24,7 @@ class Player {
   double points;
   bool killed;
   double x, y;
+  double ax, ay, vx, vy;  
 
   std::vector<Bullet> bullets;
 
