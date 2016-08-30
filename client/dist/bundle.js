@@ -782,15 +782,18 @@
 	function readCookie(name) {
 	  var c = document.cookie.split(';');
 	  for (var i = 0; i < c.length; ++i) {
-	    var item = c[i];
+	    var item = c[i].trim();
 	    var cookie = item.split('=');
+	    cookie[0] = cookie[0].trim();
+	    cookie[1] = cookie[1].trim();
 	    if (cookie[0] == name) {
 	      return cookie[1];
 	    }
 	  }
 	}
-	
-	var socket = exports.socket = new WebSocket('ws://' + (readCookie('ws') || 'localhost'), readCookie('jetpack') || 'abc');
+	var ws = readCookie('ws');
+	var jetpack = readCookie('jetpack');
+	var socket = exports.socket = new WebSocket('ws://' + (ws || 'localhost'), jetpack || 'abc');
 	
 	socket.onopen = function () {
 	  socket.send(JSON.stringify(msg));
