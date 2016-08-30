@@ -13,7 +13,7 @@ function readCookie(name) {
   }  
 }
 
-export var socket = new WebSocket('ws://localhost', readCookie('jetpack') || 'abc');
+export var socket = new WebSocket('ws://' + (readCookie('ws') || 'localhost') , readCookie('jetpack') || 'abc');
 
 socket.onopen = function () {
   socket.send(JSON.stringify(msg));
