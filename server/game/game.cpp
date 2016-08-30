@@ -24,7 +24,7 @@
 
 Player::Player() {
   game = nullptr;
-  health = 0.0;
+  health = 1.0;
   points = 0.0;
   killed = false;
   x = y = 0.0;
