@@ -4,12 +4,12 @@ export var resources = {
   load: function (callback) {
     files.forEach(file => {
       loadJSON('./' + file + '.json', json => {
-        resources.json[file] = json;
+        resources.json[file] = {data: json, name: file};
         loaded++;
         check(callback);
       })
       loadImage('./' + file + '.png', image => {
-        resources.image[file] = image;
+        resources.image[file] = {data: image, name: file};
         loaded++;
         check(callback);
       });

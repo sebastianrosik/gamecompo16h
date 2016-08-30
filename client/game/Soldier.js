@@ -9,6 +9,21 @@ const MAX_HEALTH = 1;
 const SOLDIER_WIDTH = 32;
 const SOLDIER_HEIGHT = 32;
 
+function getFrameCount(frames) {
+  let c = 0;
+  for (var i in frames) {
+    c++;
+  }
+  return c;
+}
+
+function getJSONFrame(resource, frameNumber, resourceName) {
+  let totalFrames = getFrameCount(resource.frames);
+  let relativeFrame = frameNumber % totalFrames;
+  let name = resourceName + ' ' + relativeFrame + '.ase';
+  return resource[name]
+}
+
 export default class Soldier extends Entity {
   constructor(x, y, {name = getRandomName(), onKill} = {}) {
     super(x, y, SOLDIER_WIDTH, SOLDIER_HEIGHT);
@@ -45,15 +60,14 @@ export default class Soldier extends Entity {
     }
   }
 
-  drawFrame(ctx, frame) {
+  drawFrame(ctx, frameNumber) {
     ctx.save();
-    ctx.drawImage(resources.image.soldier, this.position.x, this.position.y);
+    ctx.drawImage(resources.image.soldier.data, this.position.x, this.position.y);
     ctx.restore();
 
     let flame = resources.json.flame;
 
-    // let flameFrame = getJSONFrame(flame, frame);
-
+    let flameFrame = getJSONFrame(flame, frameNumber, 'flame');
   }
 
   draw(ctx, frame) {
