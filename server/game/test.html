@@ -1,0 +1,13 @@
+<html>
+  <body>
+  </body>
+  <script>
+    var test = new WebSocket("ws://192.168.2.198:8086", "uhmCzesc");
+    test.onopen = function (event) {
+      console.log("gogo");
+      test.send("jakis pakiet");
+    };
+
+  </script>
+</html>
+
