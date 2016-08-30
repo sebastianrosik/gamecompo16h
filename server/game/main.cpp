@@ -69,6 +69,7 @@ WebsocketConnection::WebsocketConnection(
   this->s = s;
   this->end = false;
   this->session_id = session_id;
+  this->p = nullptr;
 }
 
 void WebsocketConnection::handle() {
@@ -77,7 +78,20 @@ void WebsocketConnection::handle() {
   send(SEND_DATA, "{\"type\":\"hello\"}", 16);
 
   handle_recv();
+  printf("%s:%u: receiver terminated\n",
+         s->GetStrIP(), s->GetPort());
+
+  if (this->p) {
+    if (this->p->ws == this)
+      this->p->ws = nullptr;
+  }
+  sleep(1);
+
+  this->end = true;
   sender.join();
+
+  printf("%s:%u: sender terminated\n",
+         s->GetStrIP(), s->GetPort());  
 }
 
 void WebsocketConnection::handle_send() {
@@ -445,6 +459,8 @@ void handle_new_connection(NetSock *_s) {
 }
 
 int main(void) {
+  std::thread gm(GameMaster);
+
   NetSock server;
   server.ListenAll(8086); // ;f
 
