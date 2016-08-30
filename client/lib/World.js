@@ -10,8 +10,9 @@ export default class World extends Abstract {
     super();
     this.friction = 0.975;
     this.gravity = new Vector2(0, 0.2);
-    this.size = new Vector2(width, height);
-    this.position = new Vector2;
+    let offsetY = 500;
+    this.size = new Vector2(width, height + offsetY);
+    this.position = new Vector2(0, -offsetY);
   }
   
   linesAreIntersecting(p1, p2, p3, p4) {

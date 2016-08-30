@@ -9,7 +9,6 @@ const MAX_HEALTH = 1;
 const SOLDIER_WIDTH = 32;
 const SOLDIER_HEIGHT = 32;
 
-
 export default class Soldier extends Entity {
   constructor(x, y, {name = getRandomName(), onKill} = {}) {
     super(x, y, SOLDIER_WIDTH, SOLDIER_HEIGHT);
@@ -63,6 +62,28 @@ export default class Soldier extends Entity {
     );
     ctx.restore();
     this.drawFlameFrame(ctx,frameNumber)
+    this.drawGun(ctx,frameNumber)
+  }
+
+  drawGun(ctx,frameNumber) {
+    ctx.save();
+    ctx.translate(
+      this.position.x + this.size.x / 2, 
+      this.position.y + this.size.y /2
+    );
+    ctx.rotate(this.targetAngle + Math.PI);
+    ctx.translate(
+      -this.position.x - this.size.x / 2, 
+      -this.position.y - this.size.y / 2
+    );
+    ctx.drawImage(
+      resources.image.gun.data,
+      this.position.x, 
+      this.position.y,
+      this.size.x,
+      this.size.y
+    );
+    ctx.restore();
   }
 
   drawFlameFrame(ctx, frameNumber) {
@@ -83,6 +104,22 @@ export default class Soldier extends Entity {
       flameFrame.w,
       flameFrame.h
     );
+  }
+
+  setState(stateData, currentId) {
+    this.health = stateData.health;
+    this.nick = stateData.nick;
+
+    if (this.id !== currentId) {
+      this.position.x = stateData.x;
+      this.position.y = stateData.y;
+    }
+
+    this.points = stateData.points;
+    this.killed = stateData.killed;
+    if (stateData.killed) {
+      this.kill();
+    }
   }
 
   draw(ctx, frame) {
@@ -117,7 +154,10 @@ export default class Soldier extends Entity {
   }
 
   fire(frame) {
-    if (frame % 5 == 0) {
+    if (!this.parent) {
+      return;
+    }
+    if (frame % 15 == 0) {
       let bullet = new Bullet(
         this.position.x + this.size.x / 2,
         this.position.y + this.size.y / 2,
@@ -126,7 +166,7 @@ export default class Soldier extends Entity {
       );
       this.parent.add(bullet);
       let v = Vector2.subVecs(this.target, this.position);
-      bullet.velocity.copy(v.normalize().multiplyScalar(10));
+      bullet.velocity.copy(v.normalize().multiplyScalar(20));
     }
   }
 }

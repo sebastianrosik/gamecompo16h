@@ -1,6 +1,6 @@
 import Entity from '../lib/Entity';
 
-const BULLET_LIFETIME = 1000;
+const BULLET_LIFETIME = 3000;
 
 export default class Bullet extends Entity {
   constructor(x, y, ownerId) {

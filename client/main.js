@@ -58,6 +58,10 @@ function init() {
   document.getElementById('canvas').appendChild(canvas);
 }
 
+function onMsg(msg) {
+  game && game.message(msg);
+}
+
 function onState(state) {
   if (state === Game.STATE_GAMEOVER) {
     showScreen('gameOver');
@@ -144,7 +148,7 @@ window.addEventListener('load', () => {
   connect(() => {
     hideConnErr();
     resources.load(init);
-  });
+  }, onMsg);
 });
 
 window.addEventListener('resize', resize);

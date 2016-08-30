@@ -1,5 +1,5 @@
 
-function readCookie(name) {
+export function readCookie(name) {
   var c = document.cookie.split(';');
   for (let i = 0; i < c.length; ++i) {
     let item = c[i].trim();

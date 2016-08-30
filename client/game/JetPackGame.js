@@ -3,12 +3,12 @@ import Soldier from './Soldier';
 import Bullet from './Bullet';
 import Ground from './Ground';
 
-import {sendMsg} from '../communication'
+import {sendMsg, isConnected, readCookie} from '../communication'
 
 const SOLDIERS = 4;
 const KILL_POINTS = 100;
 const SINGLE_HIT_POINTS = 1;
-
+const BLOCK_SIZE = 32;
 
 export default class JetPackGame {
   constructor({renderer, world, keyboard, mouse, onPoints, onState, nick}) {
@@ -24,6 +24,22 @@ export default class JetPackGame {
     this.onState = onState;
     this.startSendingMessages();
     this.state = JetPackGame.STATE_GAMEPLAY;
+  }
+
+  message(msg) {
+    switch(msg.type) {
+      case 'state':
+        msg.state.players.forEach(player => {
+          let id = player[0];
+          let data = player[1];
+          let soldier = getSoldierById(this, id);
+          if (soldier) {
+            soldier.setState(data, this.myId);
+          } else {
+            this.createSoldier(id, data);
+          }
+        })
+    }
   }
 
   getPlayerState() {
@@ -59,31 +75,58 @@ export default class JetPackGame {
     }, 1000 / 16);
   }
 
+  createSoldier(id, data) {
+    let onKill = this.onKill.bind(this);
+    let soldier = new Soldier(0, 0, {onKill});
+    soldier.id = id;
+    data && soldier.setState(data);
+    this.world.soldiers.push(soldier);
+    this.add(soldier);
+    this.setSoldierPosition(soldier);
+    return soldier;
+  } 
+
+  setSoldierPosition(soldier) {
+    soldier.position.x = Math.random() * this.world.size.x;
+    soldier.position.y = 30;
+  }
+
   createSoldiers() {
     this.world.soldiers = [];
     let x = 20;
     let y = 100;
     let distance = 100;
-    let onKill = this.onKill.bind(this);
-    for (let i = 0; i < SOLDIERS; ++i) {
-      let soldier = new Soldier(i * distance, y, {onKill});
-      this.world.soldiers.push(soldier)
-    }
-    this.world.soldiers.forEach(soldier => this.add(soldier));
-    this.myself = this.world.soldiers[0];
+
+    this.world.soldiers = new Array(SOLDIERS);
+    this.myId = readCookie('jetpack');
+    let soldier = this.createSoldier(this.myId, null);
+    this.myself = soldier;
     this.myself.name = this.nick;
+
+    // this.world.soldiers[0].position.x = 50;
+    // this.world.soldiers[1].position.x = this.world.size.x - 50;
+
+    // this.world.soldiers[2].position.x = this.world.size.x / 2 - this.world.soldiers[2].size.x / 2;
+    // this.world.soldiers[2].position.y = 20;
+
+    // this.world.soldiers[3].position.x = this.world.size.x / 2 - this.world.soldiers[3].size.x / 2;
+    // this.world.soldiers[3].position.y = this.world.size.y - 100;
   }
 
-  createPlatform() {
-    
+  createPlatform(x = 0, y = 0, c = 10) {
+    var w = BLOCK_SIZE;
+    while(c--) {
+      this.add(new Ground(x + w * c, y, w, w));
+    }
   }
 
   createGround() {
-    var c = 20;
-    var w = 32;
-    while(c--) {
-      this.add(new Ground(w * c, 400, w, w));
-    }
+    let c = 5;
+    this.createPlatform(20, 320, c);
+    let platformWidth = BLOCK_SIZE * c;
+    this.createPlatform(this.world.size.x / 2 - platformWidth / 2, 120, c);
+    this.createPlatform(this.world.size.x / 2 - platformWidth / 2, 400, c);
+    this.createPlatform(this.world.size.x - platformWidth - 20, 320, c);
   }
 
   mouseHandler(frame) {
@@ -91,7 +134,7 @@ export default class JetPackGame {
       return;
     }
     if (this.mouse.button[0]) {
-      this.world.soldiers[0].fire(frame);
+      this.myself.fire(frame);
     }
     this.myself.setTarget(this.mouse);
   }
@@ -129,6 +172,10 @@ export default class JetPackGame {
     this.mouseHandler(frame);
     this.world.tick(frame);
     this.handleBulltes(frame);
+
+    if (!isConnected()) {
+      this.setGameOver();
+    }
   }
 
   addPoints(soldier, points) {

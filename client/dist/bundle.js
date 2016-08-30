@@ -123,6 +123,10 @@
 	  document.getElementById('canvas').appendChild(canvas);
 	}
 	
+	function onMsg(msg) {
+	  game && game.message(msg);
+	}
+	
 	function onState(state) {
 	  if (state === _JetPackGame2.default.STATE_GAMEOVER) {
 	    showScreen('gameOver');
@@ -209,7 +213,7 @@
 	  (0, _communication.connect)(function () {
 	    hideConnErr();
 	    _resources.resources.load(init);
-	  });
+	  }, onMsg);
 	});
 	
 	window.addEventListener('resize', resize);
@@ -628,8 +632,9 @@
 	
 	    _this.friction = 0.975;
 	    _this.gravity = new _Vector2.default(0, 0.2);
-	    _this.size = new _Vector2.default(width, height);
-	    _this.position = new _Vector2.default();
+	    var offsetY = 500;
+	    _this.size = new _Vector2.default(width, height + offsetY);
+	    _this.position = new _Vector2.default(0, -offsetY);
 	    return _this;
 	  }
 	
@@ -851,10 +856,10 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.readCookie = readCookie;
 	exports.connect = connect;
 	exports.isConnected = isConnected;
 	exports.sendMsg = sendMsg;
-	
 	function readCookie(name) {
 	  var c = document.cookie.split(';');
 	  for (var i = 0; i < c.length; ++i) {
@@ -964,7 +969,7 @@
 	  image.src = file;
 	}
 	
-	var files = ['flame', 'soldier'];
+	var files = ['flame', 'soldier', 'gun'];
 	var loaded = 0;
 	var total = files.length * 2;
 	
@@ -1013,6 +1018,7 @@
 	var SOLDIERS = 4;
 	var KILL_POINTS = 100;
 	var SINGLE_HIT_POINTS = 1;
+	var BLOCK_SIZE = 32;
 	
 	var JetPackGame = function () {
 	  function JetPackGame(_ref) {
@@ -1041,6 +1047,25 @@
 	  }
 	
 	  _createClass(JetPackGame, [{
+	    key: 'message',
+	    value: function message(msg) {
+	      var _this = this;
+	
+	      switch (msg.type) {
+	        case 'state':
+	          msg.state.players.forEach(function (player) {
+	            var id = player[0];
+	            var data = player[1];
+	            var soldier = getSoldierById(_this, id);
+	            if (soldier) {
+	              soldier.setState(data, _this.myId);
+	            } else {
+	              _this.createSoldier(id, data);
+	            }
+	          });
+	      }
+	    }
+	  }, {
 	    key: 'getPlayerState',
 	    value: function getPlayerState() {
 	      return {
@@ -1054,10 +1079,10 @@
 	  }, {
 	    key: 'getBulletsState',
 	    value: function getBulletsState() {
-	      var _this = this;
+	      var _this2 = this;
 	
 	      return this.world.children.filter(function (child) {
-	        return child.ownerId == _this.myself.id;
+	        return child.ownerId == _this2.myself.id;
 	      }).map(function (bullet) {
 	        return [bullet.position.x, bullet.position.y, bullet.lifetime];
 	      });
@@ -1074,43 +1099,74 @@
 	  }, {
 	    key: 'startSendingMessages',
 	    value: function startSendingMessages() {
-	      var _this2 = this;
+	      var _this3 = this;
 	
 	      setInterval(function () {
-	        (0, _communication.sendMsg)(_this2.getMessagePayload());
+	        (0, _communication.sendMsg)(_this3.getMessagePayload());
 	      }, 1000 / 16);
+	    }
+	  }, {
+	    key: 'createSoldier',
+	    value: function createSoldier(id, data) {
+	      var onKill = this.onKill.bind(this);
+	      var soldier = new _Soldier2.default(0, 0, { onKill: onKill });
+	      soldier.id = id;
+	      data && soldier.setState(data);
+	      this.world.soldiers.push(soldier);
+	      this.add(soldier);
+	      this.setSoldierPosition(soldier);
+	      return soldier;
+	    }
+	  }, {
+	    key: 'setSoldierPosition',
+	    value: function setSoldierPosition(soldier) {
+	      soldier.position.x = Math.random() * this.world.size.x;
+	      soldier.position.y = 30;
 	    }
 	  }, {
 	    key: 'createSoldiers',
 	    value: function createSoldiers() {
-	      var _this3 = this;
-	
 	      this.world.soldiers = [];
 	      var x = 20;
 	      var y = 100;
 	      var distance = 100;
-	      var onKill = this.onKill.bind(this);
-	      for (var i = 0; i < SOLDIERS; ++i) {
-	        var soldier = new _Soldier2.default(i * distance, y, { onKill: onKill });
-	        this.world.soldiers.push(soldier);
-	      }
-	      this.world.soldiers.forEach(function (soldier) {
-	        return _this3.add(soldier);
-	      });
-	      this.myself = this.world.soldiers[0];
+	
+	      this.world.soldiers = new Array(SOLDIERS);
+	      this.myId = (0, _communication.readCookie)('jetpack');
+	      var soldier = this.createSoldier(this.myId, null);
+	      this.myself = soldier;
 	      this.myself.name = this.nick;
+	
+	      // this.world.soldiers[0].position.x = 50;
+	      // this.world.soldiers[1].position.x = this.world.size.x - 50;
+	
+	      // this.world.soldiers[2].position.x = this.world.size.x / 2 - this.world.soldiers[2].size.x / 2;
+	      // this.world.soldiers[2].position.y = 20;
+	
+	      // this.world.soldiers[3].position.x = this.world.size.x / 2 - this.world.soldiers[3].size.x / 2;
+	      // this.world.soldiers[3].position.y = this.world.size.y - 100;
 	    }
 	  }, {
 	    key: 'createPlatform',
-	    value: function createPlatform() {}
+	    value: function createPlatform() {
+	      var x = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+	      var y = arguments.length <= 1 || arguments[1] === undefined ? 0 : arguments[1];
+	      var c = arguments.length <= 2 || arguments[2] === undefined ? 10 : arguments[2];
+	
+	      var w = BLOCK_SIZE;
+	      while (c--) {
+	        this.add(new _Ground2.default(x + w * c, y, w, w));
+	      }
+	    }
 	  }, {
 	    key: 'createGround',
 	    value: function createGround() {
-	      var c = 20;
-	      var w = 32;
-	      while (c--) {
-	        this.add(new _Ground2.default(w * c, 400, w, w));
-	      }
+	      var c = 5;
+	      this.createPlatform(20, 320, c);
+	      var platformWidth = BLOCK_SIZE * c;
+	      this.createPlatform(this.world.size.x / 2 - platformWidth / 2, 120, c);
+	      this.createPlatform(this.world.size.x / 2 - platformWidth / 2, 400, c);
+	      this.createPlatform(this.world.size.x - platformWidth - 20, 320, c);
 	    }
 	  }, {
 	    key: 'mouseHandler',
@@ -1119,7 +1175,7 @@
 	        return;
 	      }
 	      if (this.mouse.button[0]) {
-	        this.world.soldiers[0].fire(frame);
+	        this.myself.fire(frame);
 	      }
 	      this.myself.setTarget(this.mouse);
 	    }
@@ -1161,6 +1217,10 @@
 	      this.mouseHandler(frame);
 	      this.world.tick(frame);
 	      this.handleBulltes(frame);
+	
+	      if (!(0, _communication.isConnected)()) {
+	        this.setGameOver();
+	      }
 	    }
 	  }, {
 	    key: 'addPoints',
@@ -1607,6 +1667,17 @@
 	      ctx.drawImage(_resources.resources.image.soldier.data, this.position.x * d, this.position.y, this.size.x * d, this.size.y);
 	      ctx.restore();
 	      this.drawFlameFrame(ctx, frameNumber);
+	      this.drawGun(ctx, frameNumber);
+	    }
+	  }, {
+	    key: 'drawGun',
+	    value: function drawGun(ctx, frameNumber) {
+	      ctx.save();
+	      ctx.translate(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2);
+	      ctx.rotate(this.targetAngle + Math.PI);
+	      ctx.translate(-this.position.x - this.size.x / 2, -this.position.y - this.size.y / 2);
+	      ctx.drawImage(_resources.resources.image.gun.data, this.position.x, this.position.y, this.size.x, this.size.y);
+	      ctx.restore();
 	    }
 	  }, {
 	    key: 'drawFlameFrame',
@@ -1618,6 +1689,23 @@
 	      var flameFrame = this.getJSONFrame(flame, frameNumber, 'flame');
 	
 	      ctx.drawImage(_resources.resources.image.flame.data, flameFrame.x, flameFrame.y, flameFrame.w, flameFrame.h, this.position.x + flameX, this.position.y + flameY, flameFrame.w, flameFrame.h);
+	    }
+	  }, {
+	    key: 'setState',
+	    value: function setState(stateData, currentId) {
+	      this.health = stateData.health;
+	      this.nick = stateData.nick;
+	
+	      if (this.id !== currentId) {
+	        this.position.x = stateData.x;
+	        this.position.y = stateData.y;
+	      }
+	
+	      this.points = stateData.points;
+	      this.killed = stateData.killed;
+	      if (stateData.killed) {
+	        this.kill();
+	      }
 	    }
 	  }, {
 	    key: 'draw',
@@ -1644,11 +1732,14 @@
 	  }, {
 	    key: 'fire',
 	    value: function fire(frame) {
-	      if (frame % 5 == 0) {
+	      if (!this.parent) {
+	        return;
+	      }
+	      if (frame % 15 == 0) {
 	        var bullet = new _Bullet2.default(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2, this.id, Date.now());
 	        this.parent.add(bullet);
 	        var v = _Vector2.default.subVecs(this.target, this.position);
-	        bullet.velocity.copy(v.normalize().multiplyScalar(10));
+	        bullet.velocity.copy(v.normalize().multiplyScalar(20));
 	      }
 	    }
 	  }]);
@@ -1682,7 +1773,7 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
-	var BULLET_LIFETIME = 1000;
+	var BULLET_LIFETIME = 3000;
 	
 	var Bullet = function (_Entity) {
 	  _inherits(Bullet, _Entity);
