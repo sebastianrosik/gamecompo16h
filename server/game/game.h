@@ -5,6 +5,7 @@
 
 class Bullet {
  public:
+  std::string id;   
   double x, y, lifetime;
 };
 
