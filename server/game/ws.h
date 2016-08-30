@@ -20,7 +20,7 @@ class WebsocketConnection {
 
  private:
   void handle_recv();
-  void handle_send(); 
+  //void handle_send(); 
 
   std::mutex send_queue_m;
   std::list<std::string> send_queue;

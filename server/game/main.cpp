@@ -60,9 +60,17 @@ void WebsocketConnection::send(int type, const void *data, size_t size) {
 
   packet.append((const char*)data, size);
 
-  send_queue_m.lock();
-  send_queue.push_back(packet);
-  send_queue_m.unlock();
+  if (s->WriteAll(packet.data(), packet.size()) == 0) {
+    s->Disconnect();
+    printf("%s:%u: failed while sending\n",
+       s->GetStrIP(), s->GetPort());   
+    this->end = true;
+    return;
+  }
+
+  //send_queue_m.lock();
+  //send_queue.push_back(packet);
+  //send_queue_m.unlock();
 }
 
 WebsocketConnection::WebsocketConnection(
@@ -74,7 +82,7 @@ WebsocketConnection::WebsocketConnection(
 }
 
 void WebsocketConnection::handle() {
-  std::thread sender(&WebsocketConnection::handle_send, this);
+  //std::thread sender(&WebsocketConnection::handle_send, this);
   
   send(SEND_DATA, "{\"type\":\"hello\"}", 16);
 
@@ -89,12 +97,13 @@ void WebsocketConnection::handle() {
   sleep(1);
 
   this->end = true;
-  sender.join();
+  //sender.join();
 
   printf("%s:%u: sender terminated\n",
          s->GetStrIP(), s->GetPort());
 }
 
+#if 0
 void WebsocketConnection::handle_send() {
   while (!this->end.load()) {
     send_queue_m.lock();
@@ -121,6 +130,7 @@ void WebsocketConnection::handle_send() {
     }
   }
 }
+#endif
 
 void WebsocketConnection::handle_recv() {
   std::vector<uint8_t> data;
